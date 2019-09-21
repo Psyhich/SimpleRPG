@@ -120,30 +120,11 @@ define([],function () {
     };
 
     //Input
-    maint.getInputNumbers = function(numbers,vars) {
-        var temp = [false,false,false,false,false,false,false,false,false,false];
-        for(var i = 0;i < 10;i++){
-            if(vars.numbers[i] === true){
-                temp[i] = true;
-            }else if(vars.numbers[i] === false){
-                temp[i] = false;
-            }
-        }
-        if(temp.length === 0){
-            temp = null;
-        }
-        return temp;
-    };
     maint.getClickedNumber =  function(numbers,vars) {
-        var temp = maint.getInputNumbers(numbers,vars);
-        if(maint.isReachable(temp)){
-            for (var i = 0;i < temp.length;i++){
-                if(temp[i] === true){
-                    return i;
-                }
+        for(let numberToUse = 0;numberToUse < 10;numberToUse++){
+            if (vars.events.keys["is" + numberToUse + "Released"]){
+                return numberToUse;
             }
-        }else{
-            return null;
         }
     };
 

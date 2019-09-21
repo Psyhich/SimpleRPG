@@ -1466,9 +1466,15 @@ define(["classes","jquery"],function (classes,jQuery) {
         }
 
 
-        vars.events.isInventoryOpen = vars.isITogled;
         vars.events.deltaY = 0;
         vars.events.isWheel = false;
+        //Resetting all RELEASED buttons
+        for(let obj in vars.events.keys){
+            if(obj.endsWith("Released")){
+                vars.events.keys[obj] = false;
+            }
+        }
+        vars.events.keys.isEscReleased = false;
 
         /*console.log(mouseX);
         console.log(mouseY);*/
@@ -1882,33 +1888,39 @@ define(["classes","jquery"],function (classes,jQuery) {
         });
 
         //Controls
-        if (vars.isWPressed === true) {
+        //Up and down
+        if (vars.events.keys.isUpPressed === true) {
             vars.player.velY = -80;
-        }
-        if (vars.isSPressed === true) {
+        }else if (vars.events.keys.isDownPressed === true) {
             vars.player.velY = 80;
-        } else if (!vars.isWPressed && !vars.isSPressed) {
+        } else if (!vars.events.keys.isUpPressed && !vars.events.keys.isDownPressed) {
             vars.player.velY = 0;
         }
-        if (vars.isAPressed === true) {
+        //Right and left
+        if (vars.events.keys.isRightPressed === true) {
             vars.player.velX = -80;
-
-        }
-        if (vars.isDPressed === true) {
+        }else if (vars.events.keys.isLeftPressed === true){
             vars.player.velX = 80;
-        } else if (!vars.isDPressed && !vars.isAPressed) {
+        } else if (!vars.events.keys.isRightPressed && !vars.events.keys.isLeftPressed) {
             vars.player.velX = 0;
         }
-        if (vars.isFPressed === true) {
-            vars.lookForF = true;
-        } else if (vars.isFPressed === false && vars.lookForF === false) {
-            vars.events.isFReleased = false;
+        //Attack
+        vars.player.attack = vars.events.keys.isAttackPressed;
+        //Inventory
+        if(vars.events.keys.isInventoryReleased){
+            vars.events.isInventoryOpen = !vars.events.isInventoryOpen;
         }
-        if (vars.isFPressed === false && vars.lookForF === true) {
-            vars.events.isFReleased = true;
-            vars.lookForF = false;
+        //Magick menu toggle
+        if (vars.events.keys.isMagicReleased) {
+            vars.events.isSkillsOpen = !vars.events.isSkillsOpen;
+            vars.upgradeMenu.isOpened = false;
         }
-        vars.player.attack = vars.isSpacePressed;
+        //Skills upgrade menu toggle
+        if (vars.events.keys.isSkillsReleased) {
+            vars.upgradeMenu.isOpened = !vars.upgradeMenu.isOpened;
+            vars.events.isSkillsOpen = false;
+
+        }
 
         //Moving
         vars.player.x += vars.player.velX * vars.dt * maint.getSpeed(vars.player);
@@ -1932,7 +1944,7 @@ define(["classes","jquery"],function (classes,jQuery) {
 
         //Camera
         vars.camera.update();
-
+        //Checking if player going out of bounds
         if(vars.player.x + vars.player.size >= 3100){
             vars.player.x = -vars.player.velX * maint.getSpeed(vars.player) * vars.dt + vars.player.x;
         }if(vars.player.x - vars.player.size <= 0){
@@ -1954,11 +1966,11 @@ define(["classes","jquery"],function (classes,jQuery) {
                 }
             }
         }
-
-        if(vars.player.lastInjury + 20000 < vars.lastTime && vars.player.hp < 50){
+        //Begin regenaration after 10 seconds
+        if(vars.player.lastInjury + 10000 < vars.lastTime && vars.player.hp < 50){
             maint.restoreHealth(vars.player,0.1);
         }
-
+        //Checking for death and dropping all inventory items
         if(vars.player.hp <= 0){
             vars.player.isDead = true;
             vars.player.color = "rgba(255,255,255,0.4)";
@@ -1973,15 +1985,15 @@ define(["classes","jquery"],function (classes,jQuery) {
                 }
             });
         }
-
+        //If player dead waiting 15 seconds and then revieving him
         if(vars.player.isDead === true){
-            if(vars.player.deathTime + 10000 < vars.lastTime){
+            if(vars.player.deathTime + 15000 < vars.lastTime){
                 vars.player.isDead = false;
                 vars.player.color = "rgba(255,255,255,1.0)";
             }
         }
 
-        //Player mana
+        //Checking if player mana changed and regenerating it after 3 seconds
         if(vars.player.lastMana === vars.player.mana){
             if(vars.player.lastManaLoose + 3000 < vars.lastTime){
                 if(vars.player.mana + 0.2 < vars.player.maxMana){
@@ -1995,16 +2007,9 @@ define(["classes","jquery"],function (classes,jQuery) {
         }
 
 
-        //Direction
+        //Direction and actions with player attack box
         maint.getCordsOfPlayerAttackBox(vars.player,vars);
         vars.player.rangedAttackBox = maint.setPlayerRangedAttackBox(vars.player);
-
-        //Items manipulation
-        vars.player.weapon = vars.player.equipment[0].object;
-        if(vars.player.weapon === null){
-            vars.player.weapon = vars.itemTypes[11];
-        }
-
         //Constructing and saving attack box
         var count = 0;
         for (var i = 0; i < 3; i++) {
@@ -2019,6 +2024,12 @@ define(["classes","jquery"],function (classes,jQuery) {
                 }
                 count++;
             }
+        }
+
+        //Items manipulation(setting player weapon from player equipment(I dont remember how it works))
+        vars.player.weapon = vars.player.equipment[0].object;
+        if(vars.player.weapon === null){
+            vars.player.weapon = vars.itemTypes[11];
         }
 
         //Checking player to items collision
@@ -2082,7 +2093,8 @@ define(["classes","jquery"],function (classes,jQuery) {
                 });
             }
         }
-        //Delpoyables update
+
+        //Deployables update
         for(var i = 0;i < vars.map.delpoyables.length;i++) {
             var value = vars.map.delpoyables[i];
             if(maint.isReachable(value.isMovingTowards) && value.isMovingTowards === true){
@@ -2105,6 +2117,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         }
 
         //Interactions with NPCs
+        //Checking if player dead first and then checking
         if(vars.player.isDead === false) {
             var isChecked = false;
             jQuery.each(vars.npcs, function (ind, npc) {
@@ -2112,7 +2125,7 @@ define(["classes","jquery"],function (classes,jQuery) {
                     npc.players[vars.player.id].canGiveQuest = true;
                     npc.players[vars.player.id].lastQuest = 0;
                 }
-                if (Math.sqrt(Math.pow(npc.x - vars.player.x, 2) + Math.pow(npc.y - vars.player.y, 2)) <= vars.player.vision && vars.events.isFReleased) {
+                if (Math.sqrt(Math.pow(npc.x - vars.player.x, 2) + Math.pow(npc.y - vars.player.y, 2)) <= vars.player.vision && vars.events.keys.isInteractReleased) {
                     if (npc.npcType === "quest") {
                         //Checking if player have completed quests
                         jQuery.each(vars.player.inventory, function (index, value) {
@@ -2144,7 +2157,7 @@ define(["classes","jquery"],function (classes,jQuery) {
                             }
                         });
                         vars.menues[vars.menues.length] = { "id":ind,"menu":new classes.Shop(npc.items,50,100,npc.shopType,npc.money,npc)};
-                    }else if(classes.isShopOpened(vars.menues) && vars.events.isFReleased){
+                    }else if(classes.isShopOpened(vars.menues) && vars.events.keys.isInteractReleased){
                         jQuery.each(vars.menues,function (index,value) {
                             if(ind === value.id){
                                 vars.menues.splice(index,1);
@@ -2166,8 +2179,9 @@ define(["classes","jquery"],function (classes,jQuery) {
         }
 
         //Player levels
+        //?
 
-        //Spawners
+        //Spawners interaction and update
         jQuery.each(vars.map.spawners,function (index,value) {
             if(value.lastSpawned >= value.rate){
                 var enemInRange = 0;
@@ -2265,7 +2279,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             });
         }
 
-        //Attacking
+        //Player attacking
         vars.player.timeFromLastAttack += dt;
         if(vars.player.isDead === false){
             if (vars.player.timeFromLastAttack >= maint.getItem(vars.player.weapon.id,vars).cooldown && vars.player.attack === true) {
@@ -2311,6 +2325,7 @@ define(["classes","jquery"],function (classes,jQuery) {
                 }
             }
         }
+
         //Manipulations with floating numbers
         if(vars.config.isFloatingNumbers === true){
             for(var i = 0;i < vars.flotNumb.length;i++) {
@@ -2324,7 +2339,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
         }
 
-        //Checking quests
+        //Checking for completed quests
         jQuery.each(vars.player.quests,function (index,value) {
             var quest = maint.getQuest(value.id,vars.questTypes);
             value.isFinished = quest.checking(vars.player);
@@ -2334,31 +2349,16 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
         });
 
-
     };
 
     func.uiActions = function(dt,vars,maint){
-        if(!vars.isPhone){
-            vars.events.isPaused = vars.isPPressed;
-            if (vars.isEscPressed) {
-                vars.lookForEsc = true;
-            } else if (!vars.isFPressed && vars.lookForEsc === true) {
-                vars.lookForEsc = false;
+        if(vars.events.keys.isPauseReleased){
+            vars.events.isPaused = !vars.events.isPaused;
+        }
+        if(vars.events.keys.isEscReleased) {
                 vars.menu.isOpen = !vars.menu.isOpen;
             }
-            if (vars.isYPressed) {
-                vars.lookForY = true;
-            } else if (!vars.isYPressed && vars.lookForY === true) {
-                vars.lookForY = false;
-                vars.events.isSkillsOpen = !vars.events.isSkillsOpen;
-            }
-            if (vars.isUPressed) {
-                vars.lookForU = true;
-            } else if (!vars.isUPressed && vars.lookForU === true) {
-                vars.lookForU = false;
-                vars.upgradeMenu.isOpened = !vars.upgradeMenu.isOpened;
-            }
-        }
+
         var isChecked = false;
         var buff;
         if(vars.events.isInventoryOpen === true){

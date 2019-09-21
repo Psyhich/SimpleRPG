@@ -27,10 +27,61 @@ define([],function () {
         "isRightMouthClicked":false,
         "isMouthWithInv":false,
         "isInvBarWithMouse":false,
-        "isFReleased":false,
         "isWheel":false,
-        "isSkillsOpen":false
+        "isSkillsOpen":false,
+        "keys":{
+            "isNumLockUsed":false,
+            "isEscPressed":false,
+            "isEscReleased":false,
+            //Direction buttons
+            "upButton":87,
+            "isUpPressed":false,
+            "isUpReleased":false,
+            "downButton":83,
+            "isDownPressed":false,
+            "isDownReleased":false,
+            "rightButton":65,
+            "isRightPressed":false,
+            "isRightReleased":false,
+            "leftButton":68,
+            "isLeftPressed":false,
+            "isLeftReleased":false,
+            //Other
+            //Run
+            "runButton":16,
+            "isRunPressed":false,
+            "isRunReleased":false,
+            //Inventory
+            "inventoryButton":73,
+            "isInventoryPressed":false,
+            "isInventoryReleased":false,
+            //Interact
+            "interactButton":69,
+            "isInteractPressed":false,
+            "isInteractReleased":false,
+            //Skills
+            "skillsButton":84,
+            "isSkillsPressed":false,
+            "isSkillsReleased":false,
+            //Magic
+            "magicButton":77,
+            "isMagicPressed":false,
+            "isMagicReleased":false,
+            //Attack
+            "attackButton":32,
+            "isAttackPressed":false,
+            "isAttackReleased":false,
+            //Pause
+            "pauseButton":80,
+            "isPausePressed":false,
+            "isPauseReleased":false
+        }
     };
+    //Adding numbers
+    for(let numberToUse = 0; numberToUse < 10;numberToUse++){
+        vars.events.keys["is" + numberToUse + "Pressed"] = false;
+        vars.events.keys["is" + numberToUse + "Released"] = false;
+    }
     vars.config = {};
     vars.createRuned = false;
     vars.Game = {};
@@ -88,35 +139,14 @@ define([],function () {
     //Map
     vars.map;
 
-    //Input
-    vars.isWPressed = false;
-    vars.isSPressed = false;
-    vars.isDPressed = false;
-    vars.isSpacePressed = false;
-    vars.isPPressed = false;
-    vars.isAPressed = false;
-    vars.isITogled = false;
-    vars.isFPressed = false;
-    vars.isYPressed = false;
-    vars.isEPressed = false;
-    vars.isUPressed = false;
-    vars.isTPressed = false;
-    vars.isEscPressed = false;
-    vars.lookForEsc = false;
-    vars.lookForY = false;
-    vars.lookForU = false;
-    vars.numbers = [];
-    //Touch input
+    //Touch input(not realised)
     vars.touchCache = [];
-    //Phone and others input buttons
+    //Phone and others input buttons(not realised)
     vars.inventoryButton = null;
     vars.attackButton = null;
     vars.controllerButton = null;
     vars.pauseButton = null;
     vars.interactButton = null;
-
-    //Other for input
-    vars.lookForF = false;
 
     //Player
     vars.player = {};

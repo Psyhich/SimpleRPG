@@ -20,103 +20,128 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
                         variables.mouseX = v2.x;
                         variables.mouseY = v2.y;
                     });
-                } else {
-                    /*vars.canvas.ontouchstart = maintMeth.startTouch(e);
-                    vars.canvas.ontouchmove = maintMeth.moveTouch(e);
-
-                    vars.canvas.ontouchend = maintMeth.endTouch(e);
-                    vars.canvas.ontouchcancel = maintMeth.endTouch(e);*/
                 }
                 canvas.onmousewheel = function (e) {
                     variables.events.deltaY = e.deltaY;
                 };
                 jQuery(window).keydown(function (e) {
-                    if (e.keyCode === 87) {
-                        variables.isWPressed = true;
+                    //TODO add esc,shift,control,space,enter check
+                    switch (e.keyCode) {
+                        case vars.events.keys.upButton:
+                            vars.events.keys.isUpPressed = true;
+                        break;
+                        case vars.events.keys.downButton:
+                            vars.events.keys.isDownPressed = true;
+                        break;
+                        case vars.events.keys.leftButton:
+                            vars.events.keys.isLeftPressed = true;
+                        break;
+                        case vars.events.keys.rightButton:
+                            vars.events.keys.isRightPressed = true;
+                        break;
+                        case vars.events.keys.inventoryButton:
+                            vars.events.keys.isInventoryPressed = true;
+                        break;
+                        case vars.events.keys.skillsButton:
+                            vars.events.keys.isSkillsPressed = true;
+                        break;
+                        case vars.events.keys.interactButton:
+                            vars.events.keys.isInteractPressed = true;
+                        break;
+                        case vars.events.keys.magicButton:
+                            vars.events.keys.isMagicPressed = true;
+                        break;
+                        case vars.events.keys.runButton:
+                            vars.events.keys.isRunPressed = true;
+                        break;
+                        case vars.events.keys.attackButton:
+                            vars.events.keys.isAttackPressed = true;
+                        break;
+                        case vars.events.keys.pauseButton:
+                            vars.events.keys.isPausePressed = true;
+                        break;
                     }
-                    if (e.keyCode === 83) {
-                        variables.isSPressed = true;
+
+                    //Numbers check
+                    for(let numberToUse = 0; numberToUse < 10;numberToUse++){
+                        if(e.keyCode - 48 === numberToUse && !vars.events.keys.isNumLockUsed){
+                            vars.events.keys["is" + numberToUse + "Pressed"] = true;
+                        }else if(e.keyCode - 96 === numberToUse && vars.events.keys.isNumLockUsed){
+                            vars.events.keys["is" + numberToUse + "Pressed"] = true;
+                        }
                     }
-                    if (e.keyCode === 65) {
-                        variables.isAPressed = true;
-                    }
-                    if (e.keyCode === 68) {
-                        variables.isDPressed = true;
-                    }
-                    if (e.keyCode === 32) {
-                        variables.isSpacePressed = true;
-                    }
-                    if (e.keyCode === 70) {
-                        variables.isFPressed = true;
-                    }
-                    if (e.keyCode === 89) {
-                        variables.isYPressed = true;
-                    }
-                    if (e.keyCode >= 48 && e.keyCode <= 57) {
-                        variables.numbers[e.keyCode - 48] = true;
-                    }
-                    if (e.keyCode === 69) {
-                        variables.isEPressed = true;
-                    }
-                    if (e.keyCode === 85) {
-                        variables.isUPressed = true;
-                    }
-                    if (e.keyCode === 84) {
-                        variables.isTPressed = true;
-                    }
+                    //Escape check
                     if (e.keyCode === 27) {
-                        variables.isEscPressed = true;
+                        vars.events.keys.isEscPressed = true;
                     }
                 });
                 jQuery(window).keyup(function (e) {
-                    if (e.keyCode === 87) {
-                        variables.isWPressed = false;
+                    //Checking for buttons
+                    switch (e.keyCode) {
+                        case vars.events.keys.upButton:
+                            vars.events.keys.isUpPressed = false;
+                            vars.events.keys.isUpReleased = true;
+                        break;
+                        case vars.events.keys.downButton:
+                            vars.events.keys.isDownPressed = false;
+                            vars.events.keys.isDownReleased = true;
+                        break;
+                        case vars.events.keys.leftButton:
+                            vars.events.keys.isLeftPressed = false;
+                            vars.events.keys.isLeftReleased = true;
+                        break;
+                        case vars.events.keys.rightButton:
+                            vars.events.keys.isRightPressed = false;
+                            vars.events.keys.isRightReleased = true;
+                        break;
+                        case vars.events.keys.inventoryButton:
+                            vars.events.keys.isInventoryPressed = false;
+                            vars.events.keys.isInventoryReleased = true;
+                        break;
+                        case vars.events.keys.skillsButton:
+                            vars.events.keys.isSkillsPressed = false;
+                            vars.events.keys.isSkillsReleased = true;
+                        break;
+                        case vars.events.keys.interactButton:
+                            vars.events.keys.isInteractPressed = false;
+                            vars.events.keys.isInteractReleased = true;
+                        break;
+                        case vars.events.keys.magicButton:
+                            vars.events.keys.isMagicPressed = false;
+                            vars.events.keys.isMagicReleased = true;
+                        break;
+                        case vars.events.keys.runButton:
+                            vars.events.keys.isRunPressed = false;
+                            vars.events.keys.isRunReleased = true;
+                        break;
+                        case vars.events.keys.attackButton:
+                            vars.events.keys.isAttackPressed = false;
+                            vars.events.keys.isAttackReleased = true;
+                        break;
+                        case vars.events.keys.pauseButton:
+                            vars.events.keys.isPausePressed = false;
+                            vars.events.keys.isPauseReleased = true;
+                        break;
                     }
-                    if (e.keyCode === 83) {
-                        variables.isSPressed = false;
+
+                    //Numbers check
+                    for(let numberToUse = 0; numberToUse < 10;numberToUse++){
+                        if(e.keyCode - 48 === numberToUse && !vars.events.keys.isNumLockUsed){
+                            vars.events.keys["is" + numberToUse + "Released"] = true;
+                            vars.events.keys["is" + numberToUse + "Pressed"] = false;
+                        }else if(e.keyCode - 96 === numberToUse && vars.events.keys.isNumLockUsed){
+                            vars.events.keys["is" + numberToUse + "Released"] = true;
+                            vars.events.keys["is" + numberToUse + "Pressed"] = false;
+                        }
                     }
-                    if (e.keyCode === 65) {
-                        variables.isAPressed = false;
-                    }
-                    if (e.keyCode === 68) {
-                        variables.isDPressed = false;
-                    }
-                    if (e.keyCode === 32) {
-                        variables.isSpacePressed = false;
-                    }
-                    if (e.keyCode === 80) {
-                        variables.isPPressed = !variables.isPPressed;
-                    }
-                    if (e.keyCode === 73) {
-                        variables.isITogled = !variables.isITogled;
-                    }
-                    if (e.keyCode === 70) {
-                        variables.isFPressed = false;
-                    }
-                    if (e.keyCode === 89) {
-                        variables.isYPressed = false;
-                    }
-                    if (e.keyCode >= 48 && e.keyCode <= 57) {
-                        variables.numbers[e.keyCode - 48] = false;
-                    }
-                    if (e.keyCode === 69) {
-                        variables.isEPressed = false;
-                    }
-                    if (e.keyCode === 85) {
-                        variables.isUPressed = false;
-                    }
-                    if (e.keyCode === 84) {
-                        variables.isTPressed = false;
-                    }
+
                     if (e.keyCode === 27) {
-                        variables.isEscPressed = false;
+                        vars.events.keys.isEscPressed = false;
+                        vars.events.keys.isEscReleased = true;
                     }
                 });
-                /*window.onbeforeunload = function (e){
-                    //maintMeth.saveGame(variables);
-                    //e.returnValue = "Save Game?";
-                    return "Save Game?";
-                };*/
+
+                //Assigning global variables for debug
                 window.vars = variables;
                 window.maint = maintMeth;
                 window.main = mainMeth;
