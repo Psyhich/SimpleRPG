@@ -206,7 +206,7 @@ define(["maintenance"],function (maint) {
             }
         }
         for(var i = 0;i < 4;i++) {
-            if(vars.events.isLeftMouthClicked && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
+            if(vars.events.isLeftMouseReleased && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
                 if(vars.player.money >= this.items[i + this.pos].cost){
                     var isChecked = null;
                     var item = this.items[i + this.pos];
@@ -279,7 +279,7 @@ define(["maintenance"],function (maint) {
         this.sprite.draw(vars.gameTime,vars.ctx,this.x,this.y);
     };
     funcs.UpgradeMenu.prototype.updateUpgradeMenu = function(vars) {
-        if(vars.events.isLeftMouthClicked){
+        if(vars.events.isLeftMouseReleased){
             if(vars.mouseX > this.x && vars.mouseX < this.x + 204 && vars.mouseY > this.y + 66 && vars.mouseY < this.y + 143) {
                 if (vars.player.upgradePoints > 0 && vars.mouseX > this.health.x + this.x && vars.mouseX < this.health.x + this.health.w + this.x && vars.mouseY > this.health.y + this.y && vars.mouseY < this.health.y + this.health.h + this.y) {
                     vars.player.maxHp += 10 * (vars.player.level * 0.2);

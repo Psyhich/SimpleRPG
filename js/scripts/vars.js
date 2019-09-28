@@ -6,6 +6,7 @@ define([],function () {
     vars.canvas;
     vars.ctx = null;
     vars.dt = 0;
+    vars.version = "Alpha 0.21";
     //Debugging
     vars.isDebug = null;
     //Time
@@ -20,15 +21,19 @@ define([],function () {
     vars.events = {
         "isLoaded":true,
         "isShouldMoveEnemies":false,
-        "isMenuOpen":false,
         "isPaused":false,
+        //Menus
+        "isMenuOpen":false,
         "isInventoryOpen":false,
-        "isLeftMouthClicked":false,
-        "isRightMouthClicked":false,
+        "isSkillsOpen":false,
+        //Mouse
+        "isLeftMousePressed":false,
+        "isLeftMouseReleased":false,
+        "isRightMousePressed":false,
+        "isRightMouseReleased":false,
         "isMouthWithInv":false,
         "isInvBarWithMouse":false,
         "isWheel":false,
-        "isSkillsOpen":false,
         "keys":{
             "isNumLockUsed":false,
             "isEscPressed":false,

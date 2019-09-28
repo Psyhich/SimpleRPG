@@ -25,7 +25,6 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
                     variables.events.deltaY = e.deltaY;
                 };
                 jQuery(window).keydown(function (e) {
-                    //TODO add esc,shift,control,space,enter check
                     switch (e.keyCode) {
                         case vars.events.keys.upButton:
                             vars.events.keys.isUpPressed = true;

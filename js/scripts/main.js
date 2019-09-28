@@ -89,14 +89,14 @@ define(["classes","jquery"],function (classes,jQuery) {
                         this[vars.config.isFloatingNumbers ? "radioOn" : "radioOff"].draw(vars.gameTime,vars.ctx,this.x + 150,this.y + 48);
                         maint.wrapText(vars.ctx,"Alerts",this.x + 22,this.y + 96,1000,0);
                         this[vars.config.alerts ? "radioOn" : "radioOff"].draw(vars.gameTime,vars.ctx,this.x + 150,this.y + 78);
-                        maint.wrapText(vars.ctx,"Version: Alpaha 0.2",this.x + 32,this.y + 120,100000,0);
+                        maint.wrapText(vars.ctx,"Version: " + vars.version,this.x + 32,this.y + 120,100000,0);
                     }
                 }
             },
             "update":function () {
                 if(this.isOpen){
                     if(this.menuOpen){
-                        if(vars.events.isLeftMouthClicked){
+                        if(vars.events.isLeftMouseReleased){
                             if(vars.mouseX > this.x + 16 && vars.mouseX < this.x + 101 && vars.mouseY > this.y + 16 && vars.mouseY < this.y + 59){
                                 maint.saveGame(vars);
                             }
@@ -117,7 +117,7 @@ define(["classes","jquery"],function (classes,jQuery) {
                             }
                         }
                     }else{
-                        if(vars.events.isLeftMouthClicked){
+                        if(vars.events.isLeftMouseReleased){
                             if(vars.mouseX > this.x + 150 && vars.mouseX < this.x + 171 && vars.mouseY > this.y + 18 && vars.mouseY < this.y + 39){
                                 vars.config.isAutoPickup = !vars.config.isAutoPickup;
                             }if(vars.mouseX > this.x + 150 && vars.mouseX < this.x + 171 && vars.mouseY > this.y + 48 && vars.mouseY < this.y + 69){
@@ -144,17 +144,19 @@ define(["classes","jquery"],function (classes,jQuery) {
         //Other handlers
         vars.canvas.onmousedown = function (e) {
             if(e.button === 0){
-                vars.events.isLeftMouthClicked = true;
+                vars.events.isLeftMousePressed = true;
             }if(e.button === 2){
-                vars.events.isRightMouthClicked = true;
+                vars.events.isRightMousePressed = true;
             }
 
         };
         vars.canvas.onmouseup = function (e) {
             if(e.button === 0){
-                vars.events.isLeftMouthClicked = false;
+                vars.events.isLeftMousePressed = false;
+                vars.events.isLeftMouseReleased = true;
             }if(e.button === 2){
-                vars.events.isRightMouthClicked = false;
+                vars.events.isRightMousePressed = false;
+                vars.events.isRightMouseReleased = true;
             }
         };
         //Buttons
@@ -318,14 +320,14 @@ define(["classes","jquery"],function (classes,jQuery) {
                         if(vars.mouseX > this.x + x * 67 + 14 && this.x + x * 67 + 81 > vars.mouseX && vars.mouseY > this.y + y * 67 + 14 && this.x + y * 67 + 81 > vars.mouseX){
                             if(maint.isReachable(vars.player.skills[count]) && maint.isReachable(maint.getClickedNumber(vars.numbers,vars))){
                                 vars.player.hotbar.items[maint.getClickedNumber(vars.numbers,vars) - 1] = vars.player.skills[((y * 3) + x) + this.pos];
-                            }if(maint.isReachable(vars.player.skills[count]) && vars.events.isLeftMouthClicked){
+                            }if(maint.isReachable(vars.player.skills[count]) && vars.events.isLeftMouseReleased){
                                 this.chosen = vars.player.skills[((y * 3) + x) + this.pos];
                             }
                         }
                         count++;
                     }
                 }
-                if(vars.events.isLeftMouthClicked && vars.mouseX > this.x + 448 && vars.mouseX < this.x + 479 && vars.mouseY > this.y && vars.mouseY < this.y + 31){
+                if(vars.events.isLeftMouseReleased && vars.mouseX > this.x + 448 && vars.mouseX < this.x + 479 && vars.mouseY > this.y && vars.mouseY < this.y + 31){
                     vars.events.isSkillsOpen = false;
                 }
             }
@@ -678,7 +680,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         //Skills
         vars.skillTypes = [
             new classes.Skill("Firebolt","Fires a firebolt in your mouse pos.Cost 5 mana",0.5,function (user) {
-                if(vars.events.isLeftMouthClicked === true){
+                if(vars.events.isLeftMouseReleased === true){
                     if(this.lastUsed + this.cooldown * 1000 < vars.lastTime && user.mana - 5 >= 0){
                         /*var v = {"x":vars.mouseX + vars.camera.xView,"y":vars.mouseY + vars.camera.yView};
                         vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(user.x,user.y,maint.getVelocityTo(v,user).x * 50,maint.getVelocityTo(v,user).y * 50,null,"circle",5,10,function () {
@@ -713,7 +715,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         ];
         vars.staffSkills = [
             new classes.Skill("Firebolt","Fires a firebolt in your mouse pos.Cost 5 mana",0.5,function (user) {
-                if(vars.events.isLeftMouthClicked === true){
+                if(vars.events.isLeftMouseReleased === true){
                         classes.genProjectile(vars,0,user.x,user.y,100,100,true,vars.mouseX + vars.camera.xView,vars.mouseY + vars.camera.yView,true,vars.mouseX,vars.mouseY);
                         return true;
                 }
@@ -1474,6 +1476,8 @@ define(["classes","jquery"],function (classes,jQuery) {
                 vars.events.keys[obj] = false;
             }
         }
+        vars.events.isLeftMouseReleased = false;
+        vars.events.isRightMouseReleased = false;
         vars.events.keys.isEscReleased = false;
 
         /*console.log(mouseX);
@@ -2033,7 +2037,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         }
 
         //Checking player to items collision
-        if(vars.isTPressed || vars.config.isAutoPickup) {
+        if(vars.events.keys.isInteractPressed || vars.config.isAutoPickup) {
             if (vars.map.items.length > 0 && vars.player.isDead === false) {
                 //Money processing
                 /*jQuery.each(items,function (index, value) {
@@ -2378,13 +2382,13 @@ define(["classes","jquery"],function (classes,jQuery) {
             //Searching for pulled with mouse inventory or player equipment and shop interaction
             jQuery.each(vars.player.inventory,function (index,value) {
                 if(value.isEmpty === false && maint.isReachable(value.object.id) && (vars.mouseX > value.object.x && vars.mouseX < value.object.x + maint.getItem(value.object.id,vars).sprite.w) && (vars.mouseY > value.object.y && vars.mouseY < value.object.y + maint.getItem(value.object.id,vars).sprite.h)){
-                    if(vars.events.isLeftMouthClicked && !vars.events.isMouthWithInv){
+                    if(vars.events.isLeftMousePressed && !vars.events.isMouthWithInv){
                         vars.invShouldFollow = index;
                         vars.inventory.chosen = value.object;
                         vars.events.isMouthWithInv = true;
                         vars.isChecked = true;
                         return false;//Breaking each
-                    }else if(vars.events.isRightMouthClicked && !vars.events.isMouthWithInv && classes.isShopOpened(vars.menues) && classes.findShop(vars.menues).menu.shopType === maint.getItem(value.object.id,vars).type){
+                    }else if(vars.events.isRightMouseReleased && !vars.events.isMouthWithInv && classes.isShopOpened(vars.menues) && classes.findShop(vars.menues).menu.shopType === maint.getItem(value.object.id,vars).type){
                         if(classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs).money - maint.getItem(value.object.id,vars).cost >= 0) {
                             vars.player.money += maint.getItem(value.object.id,vars).cost;
                             classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs).money -= maint.getItem(value.object.id,vars).cost;
@@ -2403,7 +2407,7 @@ define(["classes","jquery"],function (classes,jQuery) {
                         && (vars.mouseX > value.object.x && vars.mouseX < value.object.x + maint.getItem(value.object.id,vars).sprite.w)
                         && (vars.mouseY > value.object.y
                         && vars.mouseY < value.object.y + maint.getItem(value.object.id,vars).sprite.h)
-                        && vars.events.isMouthWithInv === false && vars.events.isLeftMouthClicked === true){
+                        && vars.events.isMouthWithInv === false && vars.events.isLeftMousePressed === true){
                         vars.invShouldFollow = value.type;
                         vars.inventory.chosen = value.object;
                         vars.events.isMouthWithInv = true;
@@ -2427,12 +2431,12 @@ define(["classes","jquery"],function (classes,jQuery) {
                     });
                 }
                 //Making x and y of the object with x and y of mouse minus object width and height(if the mouse is clicked down)
-                if(vars.events.isLeftMouthClicked === true){
+                if(vars.events.isLeftMousePressed === true){
                     buff.object.x = vars.mouseX - maint.getItem(buff.object.id,vars).sprite.w / 2;
                     buff.object.y = vars.mouseY - maint.getItem(buff.object.id,vars).sprite.h / 2;
                 }
                 //Manipulations if mouse clicked up
-                else if(vars.events.isLeftMouthClicked  === false || vars.events.isInventoryOpen === false){
+                else if(vars.events.isLeftMouseReleased === true || vars.events.isInventoryOpen === false){
                     //Trying to find another inventory or equipment tile to put the object
                     jQuery.each(vars.player.inventory,function (index,value){
                         if((vars.mouseX > value.x && vars.mouseX < value.x + value.w) && (vars.mouseY > value.y && vars.mouseY < value.y + value.h)){
@@ -2498,7 +2502,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
 
             //Putting back the object if wrong pos
-            if(isChecked === false && vars.events.isLeftMouthClicked  === false && vars.events.isMouthWithInv === true){
+            if(isChecked === false && vars.events.isLeftMouseReleased === true && vars.events.isMouthWithInv === true){
                 buff.object.x = maint.getPosById(buff.object.inventoryId,vars).x;
                 buff.object.y = maint.getPosById(buff.object.inventoryId,vars).y;
 
@@ -2508,7 +2512,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
 
             //Checking if drop button clicked
-            if(vars.events.isLeftMouthClicked && ((vars.mouseX > vars.inventory.x + 216 && vars.mouseX < vars.inventory.x + 216 + 63) && (vars.mouseY > vars.inventory.y + 345 && vars.mouseY < vars.inventory.y + 345 + 30))){
+            if(vars.events.isLeftMouseReleased && ((vars.mouseX > vars.inventory.x + 216 && vars.mouseX < vars.inventory.x + 216 + 63) && (vars.mouseY > vars.inventory.y + 345 && vars.mouseY < vars.inventory.y + 345 + 30))){
                 if(maint.isReachable(vars.inventory.chosen)){
                     vars.isChecked = false;
                     var x2 = vars.player.x + Math.cos((-45  + (-vars.player.rangedAttackBox) * 45)  * (Math.PI / 180)) * (vars.player.size - 40);
@@ -2539,7 +2543,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
 
             //Checking if use button clicked
-            if(vars.events.isLeftMouthClicked && (vars.mouseX > vars.inventory.x + 216 && vars.mouseX < vars.inventory.x + 216 + 63 && vars.mouseY > vars.inventory.y + 312 && vars.mouseY < vars.inventory.y + 312 + 30)){
+            if(vars.events.isLeftMouseReleased && (vars.mouseX > vars.inventory.x + 216 && vars.mouseX < vars.inventory.x + 216 + 63 && vars.mouseY > vars.inventory.y + 312 && vars.mouseY < vars.inventory.y + 312 + 30)){
                 if(maint.isReachable(vars.inventory.chosen) && maint.getItem(vars.inventory.chosen.id,vars).type === "consumable" && maint.isReachable(maint.getItem(vars.inventory.chosen.id,vars).action)){
                     if(maint.getItem(vars.inventory.chosen.id,vars).isTemp === true){
                         vars.player.actions[vars.player.actions.length] = {"action":maint.getItem(vars.inventory.chosen.id,vars).action,"time":maint.getItem(vars.inventory.chosen.id,vars).time,"deployed":vars.lastTime};
@@ -2560,7 +2564,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
 
             //Checking if close button pressed
-            if(vars.events.isLeftMouthClicked === true && vars.mouseX > vars.inventory.x + 288 && vars.mouseX < vars.inventory.x + 288 + 60 && vars.mouseY > vars.inventory.y + 12 && vars.mouseY < vars.inventory.y + 12 + 72){
+            if(vars.events.isLeftMouseReleased === true && vars.mouseX > vars.inventory.x + 288 && vars.mouseX < vars.inventory.x + 288 + 60 && vars.mouseY > vars.inventory.y + 12 && vars.mouseY < vars.inventory.y + 12 + 72){
                 vars.events.isInventoryOpen = false;
                 vars.isITogled = !vars.isITogled;
             }
