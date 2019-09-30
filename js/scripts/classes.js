@@ -111,6 +111,193 @@ define(["maintenance"],function (maint) {
         return a;
     };
 
+    //Player class
+    funcs.Player = function(name,id){
+        //Main
+        this.name = name;
+        this.id = id;
+    };
+    funcs.Player.prototype.initialise = function(){
+        //Place, size, color and movement
+        this.x = 790;
+        this.y = 390;
+        this.velX = 0;
+        this.velY = 0;
+        this.speed = 1;
+        this.size = 12;
+        this.color = "rgba(255,255,255,1.0)";
+        //Basic stats
+        this.hp = 10;
+        this.stamina = 10;
+        this.mana = 10;
+        this.maxHp = 10;
+        this.maxStamina = 10;
+        this.maxMana = 10;
+        this.vision = 200;
+        //Death and injuries
+        this.lastHealth = this.hp;
+        this.lastMana = this.mana;
+        this.lastStamina = this.stamina;
+        this.lastHealthInjury = 0;
+        this.lastManaInjury = 0;
+        this.lastStaminaInjury = 0;
+        this.isDead = false;
+        this.deathTime = 0;
+        //Skills
+        this.level = 1;
+        this.exp = 0;
+        this.expToNextLevel = 0;
+        this.upgradePoints = 0;
+        this.defSkill = 0;
+        this.magicSkill = 0;
+        this.fightingSkill = 0;
+        this.skills = [];
+        //Items
+        this.money = 0;
+        this.weapon = null;
+        this.armor = null;
+        this.helmet = null;
+        this.ring = null;
+        this.shield = null;
+        this.equipment = null;
+        this.inventory = [];
+        //Attackbox
+        this.directionX = 0;
+        this.directionY = 1;
+        this.attackBox = null;
+        //Attacking
+        this.timeFromLastAttack = 0;
+        this.attack = false;
+        this.isAttackDrawn = false;
+        this.rangedAttackBox = null;
+        //Bools
+        this.canMove = true;
+        this.canInteract = true;
+        this.canAttack = true;
+        //Other
+        this.quests = [];
+        this.actions = [];
+        this.mount = {};
+        this.hotbar = {"activeId":null,"items":[]};
+
+        this.nextLevel()
+    };
+    funcs.Player.prototype.nextLevel = function(){
+        var level = this.level + 1;
+        this.expToNextLevel = 100 * (level * level) - (100 * level)
+    };
+    funcs.Player.prototype.mainActions = function(vars){
+        if(this.canMove){
+            this.movement(vars.events.keys,vars.dt);
+        }if(this.canInteract){
+            this.interactions();
+        }if(this.canAttack){
+            //Reassigning boolean
+            this.attack = vars.events.keys.isAttackPressed;
+            //Reassigning time
+            this.timeFromLastAttack += vars.dt;
+            //Checking, then attacking
+            if(!this.isDead){
+                if (this.attack === true && this.timeFromLastAttack >= maint.getItem(this.weapon.id,vars).cooldown) {
+                    let temp = false;
+                    if(maint.getItem(this.weapon.id,vars).weaponType === "melee"){
+                        if (maint.getItem(this.weapon.id,vars).dmgType === "point") {
+                            maint.checkPlayerThanPointAttack(vars);
+                        } else if (maint.getItem(this.weapon.id,vars).dmgType === "area") {
+                            maint.checkPlayerThanAreaAttack(vars);
+                        }
+                        this.timeFromLastAttack = 0;
+                    }
+                    else if(maint.getItem(this.weapon.id,vars).weaponType === "ranged" && maint.isThereAmmo(this,vars)){
+                        let x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // unchanged
+                        let y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // minus on the Sin
+
+                        let speedX = maint.getVelocityTo(this,{x:x2,y:y2}).x * 250;
+                        let speedY = maint.getVelocityTo(this,{x:x2,y:y2}).y * 250;
+
+                        x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size - 40);
+                        y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size - 40);
+
+                        funcs.genProjectile(vars,1,x2,y2,speedX,speedY,false);
+                        this.timeFromLastAttack = 0;
+                    }
+                    else if(maint.getItem(this.weapon.id,vars).weaponType === "staff"){
+                        this.timeFromLastAttack = maint.getItem(this.weapon.id,vars).action(this) === true ? 0 : this.timeFromLastAttack;
+                    }
+                    this.isAttackDrawn = true;
+
+                }
+                for (let i = 0; i < vars.map.enemies.length; i++){
+                    if (vars.map.enemies[i].isDead === true) {
+                        maint.dropRandom(vars.map.enemies[i],vars);
+                        //For quests
+                        var enem = maint.getEnemy(vars.map.enemies[i].id,vars.enemyTypes);
+                        if(maint.isReachable(this[enem.name + "Counter"])){
+                            this[enem.name + "Counter"]++;
+                        }
+                        vars.map.enemies.splice(i, 1);
+                        i--;
+
+                    }
+                }
+            }
+        }
+        /*Buffs, debuffs and other temporary effects*/
+        if(this.actions.length > 0){
+            for(let i = 0;i < this.actions.length;i++) {
+                if(this.actions[i].deployed + this.actions[i].time < vars.lastTime){
+                    this.actions.splice(i,1);
+                    i--;
+                }else{
+                    this.actions[i].action(this);
+                }
+            }
+        }
+
+        //Checking for injuries and beginning health regeneration after 9 seconds
+        if(this.lastHealth === this.hp) {
+            if (this.lastInjury + 9000 < vars.lastTime && this.hp < this.hp / 2) {
+                maint.restoreHealth(this, 0.05);
+            }
+        }
+        //Checking if player mana changed and regenerating it after 4 seconds
+        if(this.lastMana === this.mana){
+            if(this.lastManaLoose + 4000 < vars.lastTime){
+                maint.restoreMana(this,0.2);
+            }
+        }else {
+            this.lastManaInjury = vars.lastTime;
+            this.lastMana = this.mana;
+        }
+
+    };
+    funcs.Player.prototype.movement = function(keys,dt){
+        //Controls
+        //Up and down
+        if (keys.isUpPressed === true) {
+            this.velY = -80;
+        }else if (keys.isDownPressed === true) {
+            this.velY = 80;
+        } else if (!keys.isUpPressed && !keys.isDownPressed) {
+            this.velY = 0;
+        }
+        //Right and left
+        if (keys.isRightPressed === true) {
+            this.velX = -80;
+        }else if (keys.isLeftPressed === true){
+            this.velX = 80;
+        } else if (!keys.isRightPressed && !keys.isLeftPressed) {
+            this.velX = 0;
+        }
+        //Applying movement
+        this.x += this.velX * dt * maint.getSpeed(this);
+        this.y += this.velY * dt * maint.getSpeed(this);
+        this.speed = 1;
+
+    };
+    funcs.Player.prototype.interactions = function(){
+
+    };
     //Like bullet
     funcs.Delpoyable = function(x,y,vx,vy,id,time) {
         this.x = 0 + x;

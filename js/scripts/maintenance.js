@@ -1,5 +1,5 @@
 define([],function () {
-    var maint = {};
+    let maint = {};
     //General func
     maint.isReachable = function(item) {
         if(item !== null && item !== undefined){
@@ -13,7 +13,7 @@ define([],function () {
 
     //Other functions
     maint.getMousePos =  function(e,vars){
-        var rect = vars.canvas.getBoundingClientRect();
+        let rect = vars.canvas.getBoundingClientRect();
         return {
             x: e.clientX - rect.left,
             y: e.clientY - rect.top
@@ -120,7 +120,7 @@ define([],function () {
     };
 
     //Input
-    maint.getClickedNumber =  function(numbers,vars) {
+    maint.getClickedNumber = function(numbers,vars) {
         for(let numberToUse = 0;numberToUse < 10;numberToUse++){
             if (vars.events.keys["is" + numberToUse + "Released"]){
                 return numberToUse;
@@ -149,7 +149,7 @@ define([],function () {
         return jQuery.extend(true,{},value);
     };
 
-    //Getters for enemies items projectiles
+    //Getters for enemies, items, projectiles
     //Items
     maint.getItem = function(id,vars){return maint.isReachable(vars.itemTypes[id]) ? vars.itemTypes[id] : null;};
     maint.createInTheWorld = function(x,y,id,vars,other){
@@ -351,113 +351,62 @@ define([],function () {
 
     //Geters for player or entity stats
     //Defence
-    maint.getDef = function(user,vars){
-        var def = 0;
+    maint.getDef = function(user){
+        let def = 0;
         for(var i = 0;i < user.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object) && user.equipment[i].type !== "shield"){
                 def += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).def) ? maint.getItem(user.equipment[i].object.id,vars).def : 0;
             }
         }
         def += maint.isReachable(user.def) ? user.def : 0;
-        /*if(maint.isReachable(user.armor) && maint.isReachable(maint.getItem(user.armor.id,vars).def)){
-            def += maint.getItem(user.armor.id,vars).def;
-        }if(maint.isReachable(user.helmet) && maint.isReachable(user.helmet.id)){
-            def += maint.getItem(user.helmet.id,vars).def;
-        }if(maint.isReachable(user.skillDef)){
-            def += user.skillDef;
-        }if(maint.isReachable(user.ring) && maint.isReachable(user.ring.id)){
-            def += maint.getItem(user.armor.id,vars).def;
-        }if(maint.isReachable(user.weapon) && maint.isReachable(user.weapon.id)){
-            def += maint.getItem(user.armor.id,vars).def;
-        }if(maint.isReachable(user.def)){
-            def += user.def;
-        }*/
         return def;
     };
-    maint.getFullDef = function(user,vars) {
-        var def = 0;
-        for(var i = 0;i < user.equipment.length;i++){
+    maint.getFullDef = function(user) {
+        let def = 0;
+        for(let i = 0;i < user.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object) && maint.isReachable(user.equipment[i].object)){
                 def += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).def) ? maint.getItem(user.equipment[i].object.id,vars).def : 0;
             }
         }
         def += maint.isReachable(user.def) ? user.def : 0;
-        /*if(maint.isReachable(user.armor) && maint.isReachable(maint.getItem(user.armor.id,vars).def)){
-            def += maint.getItem(user.armor.id,vars).def;
-        }if(maint.isReachable(user.helmet) && maint.isReachable(user.helmet.id)){
-            def += maint.getItem(user.helmet.id,vars).def;
-        }if(maint.isReachable(user.skillDef)){
-            def += user.skillDef;
-        }if(maint.isReachable(user.ring) && maint.isReachable(user.ring.id)){
-            def += maint.getItem(user.armor.id,vars).def;
-        }if(maint.isReachable(user.weapon) && maint.isReachable(user.weapon.id)){
-            def += maint.getItem(user.armor.id,vars).def;
-        }if(maint.isReachable(user.def)){
-            def += user.def;
-        }if(maint.isReachable(user.shield) && maint.isReachable(user.shield.id)){
-            def += maint.getItem(user.shield.id).def;
-        }*/
         return def;
     };
     //Attack
     maint.getAttack = function(user) {
-        var attack = 0;
-        if(maint.isReachable(user.armor) && maint.isReachable(user.armor.dmg)){
-            attack += user.armor.dmg;
-        }if(maint.isReachable(user.helmet) && maint.isReachable(user.helmet.dmg)){
-            attack += user.helmet.dmg;
-        }if(maint.isReachable(user.skillAttack)){
-            attack += user.skillAttack;
-        }if(maint.isReachable(user.ring) && maint.isReachable(user.ring.dmg)){
-            attack += user.ring.dmg;
-        }if(maint.isReachable(user.weapon) && maint.isReachable(user.weapon.dmg)){
-            attack += user.weapon.dmg;
-        }if(maint.isReachable(user.shield) && maint.isReachable(user.shield.dmg)){
-            attack += user.shield.dmg;
+        let attack = 0;
+        for(let i = 0;i < user.equipment.length;i++){
+            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
+                attack += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).dmg) ? maint.getItem(user.equipment[i].object.id,vars).dmg : 0;
+            }
         }
         return attack;
     };
     //Resist
     maint.getResist = function(user,resist) {
-        var resistNum = 0;
-        var resistance = resist + "Resist"
-        if(maint.isReachable(user.armor) && maint.isReachable(user.armor[resistance])){
-            resistNum += user.armor[resistance];
-        }if(maint.isReachable(user.helmet) && maint.isReachable(user.helmet[resistance])){
-            resistNum += user.helmet[resistance];
-        }if(maint.isReachable(user[resistance])){
-            resistNum += user[resistance];
-        }if(maint.isReachable(user.ring) && maint.isReachable(user.ring[resistance])){
-            resistNum += user.ring[resistance];
-        }if(maint.isReachable(user.weapon) && maint.isReachable(user.weapon[resistance])){
-            resistNum += user.weapon[resistance];
-        }if(maint.isReachable(user.shield) && maint.isReachable(user.shield[resistance])){
-            resistNum += user.shield[resistance];
+        let resistNum = 0;
+        let resistance = resist + "Resist";
+        for(let i = 0;i < user.equipment.length;i++){
+            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
+                resistNum += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars)[resistance]) ? maint.getItem(user.equipment[i].object.id,vars)[resistance] : 0;
+            }
         }
         return resistNum;
     };
     //Speed
     maint.getSpeed = function(user){
-        var speed = 0;
-        for(var i = 0;i < user.equipment.length;i++){
+        let speed = 0;
+        for(let i = 0;i < user.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
                 speed += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).spd) ? maint.getItem(user.equipment[i].object.id,vars).spd : 0;
             }
         }
-        if(maint.isReachable(user.speed)){
-            speed += user.speed;
-        }
+        speed += maint.isReachable(user.speed) ? user.speed : 0;
         return speed;
     };
     maint.minusSpeed = function(user,value){
         if(maint.isReachable(user.speed) && user.speed - value < 0){
             user.speed -= value
         }
-    };
-
-    //Levels
-    maint.nextLevel = function(level){
-        return 100 * (level * level) - (100 * level)
     };
 
     //Quests
@@ -636,13 +585,26 @@ define([],function () {
 
     };
 
-    //Other
+    //Restoration
     maint.restoreHealth = function(entity,value){
         entity.hp += value;
         if(entity.hp > entity.maxHp){
             entity.hp = entity.maxHp;
         }
     };
+    maint.restoreMana = function(entity,value){
+        entity.mana += value;
+        if(entity.mana > entity.maxMana){
+            entity.mana = entity.maxMana;
+        }
+    };
+    maint.restoreStamina = function(entity,value){
+        entity.stamina += value;
+        if(entity.stamina > entity.maxStamina){
+            entity.stamina = entity.maxStamina;
+        }
+    };
+    //Other
     maint.wrapText = function(context, text, x, y, maxWidth, lineHeight){
         var a = text + "";
         var words = a.split(' ');

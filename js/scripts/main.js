@@ -202,57 +202,8 @@ define(["classes","jquery"],function (classes,jQuery) {
 
         //Player
         if(!vars.isLoadedFromSaveGame){
-            vars.player = {
-                "name":"Roma",
-                "id":0,
-                "x":790,
-                "y":390,
-                "velX":0,
-                "velY":0,
-                "hp":100,
-                "maxHp":100,
-                "mana":10,
-                "maxMana":10,
-                "stamina":10,
-                "maxStamina":10,
-                "money":0,
-                "directionx":0,
-                "directiony":1,
-                "size":12,
-                "attackBox":null,
-                "weapon":null,
-                "armor":null,
-                "helmet":null,
-                "ring":null,
-                "shield":null,
-                "attack":false,
-                "timeFromLastAttack":0,
-                "isMotionChecked":true,
-                "equipment":null,
-                "isAttackDrawn":false,
-                "vision":200,
-                "defSkill":0,
-                "exp":0,
-                "level":1,
-                "expToNextLevel":0,
-                "skills":[],
-                "magicSkill":0,
-                "fightingSkill":0,
-                "actions":[],
-                "lastInjury":0,
-                "isDead":false,
-                "deathTime":0,
-                "color":"rgba(255,255,255,1.0)",
-                "mount":{},
-                "speed":1,
-                "hotbar":{"activeId":null,"items":[]},
-                "lastMana":0,
-                "upgradePoints":0,
-                "rangedAttackBox":null,
-                "inventory":{},
-                "quests":[]
-            };
-            vars.player.expToNextLevel += maint.nextLevel(vars.player.level + 1);
+            vars.player = new classes.Player("Romko",0);
+            vars.player.initialise();
         }
 
         //Player attack box
@@ -337,7 +288,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         vars.upgradeMenu = {"isOpened":false,"menu":new classes.UpgradeMenu(vars)};
 
         //Creating arrays and objects
-        var itemArea;
+        let itemArea;
         itemArea = maint.makeSpriteSheetArayInLine(6,vars.swordsSpriteSheet);
         //Swords array
         for(var i = 0;i < 6;i++){
@@ -1842,7 +1793,7 @@ define(["classes","jquery"],function (classes,jQuery) {
 
         //Draw player hotbar
         vars.ctx.drawImage(vars.playerHotbarSprite,vars.playerHotbar.x,vars.playerHotbar.y);
-        for(var i = 0;i < 6;i++){
+        for(let i = 0;i < 6;i++){
             if(maint.isReachable(vars.player.hotbar.items[i]) && i < 6) {
                 maint.getSkill(vars.player.hotbar.items[i].id,vars.skillTypes).sprite.drawWH(vars.gameTime,vars.ctx,vars.playerHotbar.x + i * 54 + 21, vars.playerHotbar.y + 4, 41, 41);
             }
@@ -1854,7 +1805,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
         vars.ctx.fillText("1",55 + vars.playerHotbar.x,44 + vars.playerHotbar.y);
 
-        for(var i = 1;i < 6;i++){
+        for(let i = 1;i < 6;i++){
             vars.ctx.fillText("" + (i + 1),vars.playerHotbar.x + 53 * (i + 1),vars.playerHotbar.y + 44);
         }
 
@@ -1890,26 +1841,6 @@ define(["classes","jquery"],function (classes,jQuery) {
                 vars.tileTypes[value.id].action(vars.player,value.x,value.y);
             }
         });
-
-        //Controls
-        //Up and down
-        if (vars.events.keys.isUpPressed === true) {
-            vars.player.velY = -80;
-        }else if (vars.events.keys.isDownPressed === true) {
-            vars.player.velY = 80;
-        } else if (!vars.events.keys.isUpPressed && !vars.events.keys.isDownPressed) {
-            vars.player.velY = 0;
-        }
-        //Right and left
-        if (vars.events.keys.isRightPressed === true) {
-            vars.player.velX = -80;
-        }else if (vars.events.keys.isLeftPressed === true){
-            vars.player.velX = 80;
-        } else if (!vars.events.keys.isRightPressed && !vars.events.keys.isLeftPressed) {
-            vars.player.velX = 0;
-        }
-        //Attack
-        vars.player.attack = vars.events.keys.isAttackPressed;
         //Inventory
         if(vars.events.keys.isInventoryReleased){
             vars.events.isInventoryOpen = !vars.events.isInventoryOpen;
@@ -1926,11 +1857,14 @@ define(["classes","jquery"],function (classes,jQuery) {
 
         }
 
-        //Moving
-        vars.player.x += vars.player.velX * vars.dt * maint.getSpeed(vars.player);
-        vars.player.y += vars.player.velY * vars.dt * maint.getSpeed(vars.player);
-        vars.player.speed = 1;
+        //Items manipulation(setting player weapon from player equipment(I dont remember how it works))
+        vars.player.weapon = vars.player.equipment[0].object;
+        if(vars.player.weapon == null){
+            vars.player.weapon = vars.itemTypes[11];
+        }
 
+        //Main actions of player like movement, attacking, interacting
+        vars.player.mainActions(vars);
         //Collision with objects
         jQuery.each(vars.map.object,function (index,value) {
             if(value.type.floor === vars.floorTypes.solid){
@@ -1959,21 +1893,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             vars.player.y = -vars.player.velY * maint.getSpeed(vars.player) * vars.dt + vars.player.y;
         }
 
-        //Player actions
-        if(vars.player.actions.length > 0){
-            for(var i = 0;i < vars.player.actions.length;i++) {
-                if(vars.player.actions[i].deployed + vars.player.actions[i].time < vars.lastTime){
-                    vars.player.actions.splice(i,1);
-                    i--;
-                }else{
-                    vars.player.actions[i].action(vars.player);
-                }
-            }
-        }
-        //Begin regenaration after 10 seconds
-        if(vars.player.lastInjury + 10000 < vars.lastTime && vars.player.hp < 50){
-            maint.restoreHealth(vars.player,0.1);
-        }
+
         //Checking for death and dropping all inventory items
         if(vars.player.hp <= 0){
             vars.player.isDead = true;
@@ -1997,18 +1917,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
         }
 
-        //Checking if player mana changed and regenerating it after 3 seconds
-        if(vars.player.lastMana === vars.player.mana){
-            if(vars.player.lastManaLoose + 3000 < vars.lastTime){
-                if(vars.player.mana + 0.2 < vars.player.maxMana){
-                    vars.player.mana += 0.2;
-                }
 
-            }
-        }else {
-            vars.player.lastManaLoose = vars.lastTime;
-            vars.player.lastMana = vars.player.mana;
-        }
 
 
         //Direction and actions with player attack box
@@ -2030,11 +1939,7 @@ define(["classes","jquery"],function (classes,jQuery) {
             }
         }
 
-        //Items manipulation(setting player weapon from player equipment(I dont remember how it works))
-        vars.player.weapon = vars.player.equipment[0].object;
-        if(vars.player.weapon === null){
-            vars.player.weapon = vars.itemTypes[11];
-        }
+
 
         //Checking player to items collision
         if(vars.events.keys.isInteractPressed || vars.config.isAutoPickup) {
@@ -2255,11 +2160,9 @@ define(["classes","jquery"],function (classes,jQuery) {
                             maint.genFloatingNumber(vars.player.x, vars.player.y, "0", "rgba(255,0,0,1.0)", 15,vars);
                         }else if (enemyT.dmg > maint.getFullDef(vars.player,vars)) {
                             vars.player.hp -= (enemyT.dmg - maint.getFullDef(vars.player,vars));
-                            vars.player.lastInjury = vars.lastTime;
                             maint.genFloatingNumber(vars.player.x, vars.player.y, (enemyT.dmg - maint.getFullDef(vars.player,vars)), "rgba(255,0,0,1.0)", 15,vars);
                         } else {
                             vars.player.hp -= 1;
-                            vars.player.lastInjury = vars.lastTime;
                             maint.genFloatingNumber(vars.player.x, vars.player.y, 1, "rgba(255,0,0,1.0)", 15,vars);
                         }
                         value.timeFromLastAttack = 0;
@@ -2268,11 +2171,9 @@ define(["classes","jquery"],function (classes,jQuery) {
                         maint.genFloatingNumber(vars.player.x, vars.player.y, "0", "rgba(255,0,0,1.0)", 15,vars);
                     }else if (enemyT.dmg > maint.getDef(vars.player,vars)) {
                         vars.player.hp -= (enemyT.dmg - maint.getDef(vars.player,vars));
-                        vars.player.lastInjury = vars.lastTime;
                         maint.genFloatingNumber(vars.player.x, vars.player.y, (enemyT.dmg - maint.getDef(vars.player,vars)), "rgba(255,0,0,1.0)", 15,vars);
                     } else {
                         vars.player.hp -= 1;
-                        vars.player.lastInjury = vars.lastTime;
                         maint.genFloatingNumber(vars.player.x, vars.player.y, 1, "rgba(255,0,0,1.0)", 15,vars);
                     }
                     value.timeFromLastAttack = 0;
@@ -2284,51 +2185,8 @@ define(["classes","jquery"],function (classes,jQuery) {
         }
 
         //Player attacking
-        vars.player.timeFromLastAttack += dt;
-        if(vars.player.isDead === false){
-            if (vars.player.timeFromLastAttack >= maint.getItem(vars.player.weapon.id,vars).cooldown && vars.player.attack === true) {
-                var temp = false;
-                if(maint.getItem(vars.player.weapon.id,vars).weaponType === "melee"){
-                    if (maint.getItem(vars.player.weapon.id,vars).dmgType === "point") {
-                    maint.checkPlayerThanPointAttack(vars);
-                } else if (maint.getItem(vars.player.weapon.id,vars).dmgType === "area") {
-                    maint.checkPlayerThanAreaAttack(vars);
-                }
-                vars.player.timeFromLastAttack = 0;
-                }
-                else if(maint.getItem(vars.player.weapon.id,vars).weaponType === "ranged" && maint.isThereAmmo(vars.player,vars)){
-                    var x2 = vars.player.x + Math.cos((-45  + (-vars.player.rangedAttackBox) * 45)  * (Math.PI / 180)) * (vars.player.size + 10);    // unchanged
-                    var y2 = vars.player.y - Math.sin((-45  + (-vars.player.rangedAttackBox) * 45)  * (Math.PI / 180)) * (vars.player.size + 10);    // minus on the Sin
 
-                    var speedX = maint.getVelocityTo(vars.player,{x:x2,y:y2}).x * 250;
-                    var speedY = maint.getVelocityTo(vars.player,{x:x2,y:y2}).y * 250;
 
-                    x2 = vars.player.x + Math.cos((-45  + (-vars.player.rangedAttackBox) * 45)  * (Math.PI / 180)) * (vars.player.size - 40);
-                    y2 = vars.player.y - Math.sin((-45  + (-vars.player.rangedAttackBox) * 45)  * (Math.PI / 180)) * (vars.player.size - 40);
-
-                    classes.genProjectile(vars,1,x2,y2,speedX,speedY,false);
-                    vars.player.timeFromLastAttack = 0;
-                }
-                else if(maint.getItem(vars.player.weapon.id,vars).weaponType === "staff"){
-                    vars.player.timeFromLastAttack = maint.getItem(vars.player.weapon.id,vars).action(vars.player) === true ? 0 : vars.player.timeFromLastAttack;
-                }
-                vars.player.isAttackDrawn = true;
-
-            }
-            for (var i = 0; i < vars.map.enemies.length; i++){
-                if (vars.map.enemies[i].isDead === true) {
-                    maint.dropRandom(vars.map.enemies[i],vars);
-                    //For quests
-                    var enem = maint.getEnemy(vars.map.enemies[i].id,vars.enemyTypes);
-                    if(maint.isReachable(vars.player[enem.name + "Counter"])){
-                        vars.player[enem.name + "Counter"]++;
-                    }
-                    vars.map.enemies.splice(i, 1);
-                    i--;
-
-                }
-            }
-        }
 
         //Manipulations with floating numbers
         if(vars.config.isFloatingNumbers === true){
@@ -2621,7 +2479,7 @@ define(["classes","jquery"],function (classes,jQuery) {
         if(vars.player.exp >= vars.player.expToNextLevel){
             vars.player.level++;
             vars.player.exp -= vars.player.expToNextLevel;
-            vars.player.expToNextLevel = maint.nextLevel(vars.player.level);
+            vars.player.nextLevel();
             vars.player.upgradePoints++;
         }
 
