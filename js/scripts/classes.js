@@ -1,7 +1,7 @@
-define(["maintenance"],function (maint) {
-    var funcs = {};
+define(["maintenance","vars"],function (maint,vars) {
+    let classes = {};
     //Sprite
-    funcs.Sprite = function(data,img) {
+    classes.Sprite = function(data,img) {
         if(img === null || img === undefined){
             return false;
         }
@@ -11,7 +11,7 @@ define(["maintenance"],function (maint) {
         this.loop = true;
         this.img = img;
         if(data.length > 1){
-            for(var i in data){
+            for(let i in data){
                 if(typeof data[i].d === undefined){
                     data[i].d = 100;
                 }
@@ -25,7 +25,7 @@ define(["maintenance"],function (maint) {
         this.w = 0;
         this.h = 0;
     };
-    funcs.Sprite.prototype.drawWH = function (t,ctx,x,y,w,h) {
+    classes.Sprite.prototype.drawWH = function (t,ctx,x,y,w,h) {
         var frameId = 0;
         if(!this.loop && this.animated && t >= this.duration){
             frameId = (this.frames.length - 1);
@@ -52,7 +52,7 @@ define(["maintenance"],function (maint) {
         this.w = this.frames[frameId].w;
         this.h = this.frames[frameId].h;
     };
-    funcs.Sprite.prototype.draw = function (t,ctx,x,y){
+    classes.Sprite.prototype.draw = function (t,ctx,x,y){
         var frameId = 0;
         if(!this.loop && this.animated && t >= this.duration){
             frameId = (this.frames.length - 1);
@@ -81,7 +81,7 @@ define(["maintenance"],function (maint) {
     };
 
     //Skill
-    funcs.Skill = function(name,description,cooldown,func,sprite) {
+    classes.Skill = function(name,description,cooldown,func,sprite) {
         this.name = name;
         this.description = description;
         this.action = func;
@@ -90,10 +90,10 @@ define(["maintenance"],function (maint) {
         this.lastUsed = 0;
         this.type = "skill";
     };
-    funcs.Skill.prototype.use = function (user) {
+    classes.Skill.prototype.use = function (user) {
         this.action(user);
     };
-    funcs.Skill.prototype.learn = function(user) {
+    classes.Skill.prototype.learn = function(user) {
         var a = false;
         if(user.skills.length > 0){
             jQuery.each(user.skills,function (index,value) {
@@ -111,195 +111,577 @@ define(["maintenance"],function (maint) {
         return a;
     };
 
-    //Player class
-    funcs.Player = function(name,id){
-        //Main
-        this.name = name;
-        this.id = id;
-    };
-    funcs.Player.prototype.initialise = function(){
-        //Place, size, color and movement
-        this.x = 790;
-        this.y = 390;
-        this.velX = 0;
-        this.velY = 0;
-        this.speed = 1;
-        this.size = 12;
-        this.color = "rgba(255,255,255,1.0)";
-        //Basic stats
-        this.hp = 10;
-        this.stamina = 10;
-        this.mana = 10;
-        this.maxHp = 10;
-        this.maxStamina = 10;
-        this.maxMana = 10;
-        this.vision = 200;
-        //Death and injuries
-        this.lastHealth = this.hp;
-        this.lastMana = this.mana;
-        this.lastStamina = this.stamina;
-        this.lastHealthInjury = 0;
-        this.lastManaInjury = 0;
-        this.lastStaminaInjury = 0;
-        this.isDead = false;
-        this.deathTime = 0;
-        //Skills
-        this.level = 1;
-        this.exp = 0;
-        this.expToNextLevel = 0;
-        this.upgradePoints = 0;
-        this.defSkill = 0;
-        this.magicSkill = 0;
-        this.fightingSkill = 0;
-        this.skills = [];
-        //Items
-        this.money = 0;
-        this.weapon = null;
-        this.armor = null;
-        this.helmet = null;
-        this.ring = null;
-        this.shield = null;
-        this.equipment = null;
-        this.inventory = [];
-        //Attackbox
-        this.directionX = 0;
-        this.directionY = 1;
-        this.attackBox = null;
-        //Attacking
-        this.timeFromLastAttack = 0;
-        this.attack = false;
-        this.isAttackDrawn = false;
-        this.rangedAttackBox = null;
-        //Bools
-        this.canMove = true;
-        this.canInteract = true;
-        this.canAttack = true;
-        //Other
-        this.quests = [];
-        this.actions = [];
-        this.mount = {};
-        this.hotbar = {"activeId":null,"items":[]};
+    //Inventory class
+    classes.Inventory = class {
+        //Main constructor(seams obvious)
+        constructor(){
+            this.x = 850;
+            this.y = 10;
+            this.w = 48;
+            this.h = 48;
+            this.slots = [];
+            this.equipment = {};
+            this.verticalPosition = 0;//TODO implement this + make numbers of inventory slots in player class
+            this.chosen = null;/** chosen is an copy of slot that contains chosen item*/
 
-        this.nextLevel()
-    };
-    funcs.Player.prototype.nextLevel = function(){
-        var level = this.level + 1;
-        this.expToNextLevel = 100 * (level * level) - (100 * level)
-    };
-    funcs.Player.prototype.mainActions = function(vars){
-        if(this.canMove){
-            this.movement(vars.events.keys,vars.dt);
-        }if(this.canInteract){
-            this.interactions();
-        }if(this.canAttack){
-            //Reassigning boolean
-            this.attack = vars.events.keys.isAttackPressed;
-            //Reassigning time
-            this.timeFromLastAttack += vars.dt;
-            //Checking, then attacking
-            if(!this.isDead){
-                if (this.attack === true && this.timeFromLastAttack >= maint.getItem(this.weapon.id,vars).cooldown) {
-                    let temp = false;
-                    if(maint.getItem(this.weapon.id,vars).weaponType === "melee"){
-                        if (maint.getItem(this.weapon.id,vars).dmgType === "point") {
-                            maint.checkPlayerThanPointAttack(vars);
-                        } else if (maint.getItem(this.weapon.id,vars).dmgType === "area") {
-                            maint.checkPlayerThanAreaAttack(vars);
-                        }
-                        this.timeFromLastAttack = 0;
-                    }
-                    else if(maint.getItem(this.weapon.id,vars).weaponType === "ranged" && maint.isThereAmmo(this,vars)){
-                        let x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // unchanged
-                        let y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // minus on the Sin
+            //Making inventory slots
+            for(let i = 0;i < 9;i++){
+                this.slots[i] = {
+                    "x":this.getPosByID(i).x,
+                    "y":this.getPosByID(i).y,
+                    "inventoryID":i,
+                    "object":null,
+                    "type":"item"
+                };
+            }
 
-                        let speedX = maint.getVelocityTo(this,{x:x2,y:y2}).x * 250;
-                        let speedY = maint.getVelocityTo(this,{x:x2,y:y2}).y * 250;
+            //Assigning equipment slots
+            let equps = ["weapon","shield","armor","helmet","ring"];//Don't change the queue
+            for(let index in equps){
+                let value = equps[index];
+                this.equipment[value] = {
+                    "x": this.x + 27 + (index * 48 + (index !== 4 ? (index * 3) : 0)),
+                    "y": this.y + 445,
+                    "w": this.w,
+                    "h": this.h,
+                    "type": value,
+                    "object":null,
+                    "inventoryID":value
+                };
+            }
 
-                        x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size - 40);
-                        y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size - 40);
+        }
 
-                        funcs.genProjectile(vars,1,x2,y2,speedX,speedY,false);
-                        this.timeFromLastAttack = 0;
-                    }
-                    else if(maint.getItem(this.weapon.id,vars).weaponType === "staff"){
-                        this.timeFromLastAttack = maint.getItem(this.weapon.id,vars).action(this) === true ? 0 : this.timeFromLastAttack;
-                    }
-                    this.isAttackDrawn = true;
+        //Main funcs
+        render = function(){
+            //Drawing the sprite of inventory
+            vars.ctx.drawImage(vars.inventorySprite,this.x,this.y);
 
-                }
-                for (let i = 0; i < vars.map.enemies.length; i++){
-                    if (vars.map.enemies[i].isDead === true) {
-                        maint.dropRandom(vars.map.enemies[i],vars);
-                        //For quests
-                        var enem = maint.getEnemy(vars.map.enemies[i].id,vars.enemyTypes);
-                        if(maint.isReachable(this[enem.name + "Counter"])){
-                            this[enem.name + "Counter"]++;
-                        }
-                        vars.map.enemies.splice(i, 1);
-                        i--;
+            //Drawing all inventory items //TODO implement many slots feature
+            for(let value of this.slots) {
+                let item = value.object;
+                if(maint.isReachable(item)){
+                    //Getting orinal item
+                    let origin = maint.getItem(item.id,vars);
+                    //Getting width and height of item
+                    let w = origin.sprite.w;
+                    let h = origin.sprite.h;
 
+                    //Setting it's width and height if it's bigger
+                    w = w > this.w ? this.w : w;
+                    h = h > this.h ? this.h : h;
+
+                    //Drawing (if it's chosen, drawing on mouse position)
+                    if(maint.isReachable(this.chosen) && item === this.chosen.object && vars.events.isMouseWithInv){
+                        origin.sprite.drawWH(vars.gameTime, vars.ctx, vars.mouseX - w / 2, vars.mouseY - h / 2, w, h);
+                    }else {
+                        //Getting stats to center the item in tile of inventory
+                        let tw = this.w / 2 - w / 2;
+                        let th = this.h / 2 - h / 2;
+
+                        origin.sprite.drawWH(vars.gameTime, vars.ctx, value.x + tw, value.y + th, w, h);
                     }
                 }
             }
-        }
-        /*Buffs, debuffs and other temporary effects*/
-        if(this.actions.length > 0){
-            for(let i = 0;i < this.actions.length;i++) {
-                if(this.actions[i].deployed + this.actions[i].time < vars.lastTime){
-                    this.actions.splice(i,1);
-                    i--;
+
+            //Drawing all equipment items //TODO implement equipment
+            for(let index in this.equipment){
+                //Getting item
+                let item = this.getSlot(index).object;
+
+                //If it exist draw it
+                if(maint.isReachable(item)){
+                    //Creating original copy of item
+                    let origin = maint.getItem(item.id,vars);
+
+                    //Getting width and height of item
+                    let w = origin.sprite.w;
+                    let h = origin.sprite.h;
+
+                    //Getting needed distance to reach center of inventory slot
+                    let tw = w > this.w ? this.w - w + 5 : 0;
+                    let th = h > this.h ? this.h - h + 5 : 0;
+
+                    //Setting it's width and height if it's bigger
+                    w = w > this.w ? this.w : w;
+                    h = h > this.h ? this.h : h;
+
+                    //Drawing item
+                    if(item === this.chosen.object && vars.events.isMouthWithInv){
+                        origin.sprite.drawWH(vars.gameTime, vars.ctx, item.x, item.y, w, h);
+                    }else {
+                        origin.sprite.drawWH(vars.gameTime, vars.ctx, item.x - tw, item.y - th, w, h);
+                    }
+                }
+
+            }
+
+            //If item is chosen draw it's info
+            if(maint.isReachable(this.chosen) && maint.isReachable(this.chosen.object)){
+                let origin = maint.getItem(this.chosen.object.id,vars);
+
+                //Setting text colors and font
+                vars.ctx.srtokeStyle = "rgba(255,255,255,1.0)";
+                vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
+                vars.ctx.font = "15px Arial";
+
+                vars.ctx.beginPath();
+
+                //Stating stats //TODO make function stateInfo() for items
+                if(origin.type === "weapon"){
+                    vars.ctx.font = "12px Arial";
+                    if(origin.weaponType === "melee"){
+                        vars.ctx.fillText(origin.name,this.x + 30,this.y + 314);
+                        vars.ctx.fillText("Has: " + origin.dmg + " damage",this.x + 30,this.y + 326);
+                        vars.ctx.fillText("Has: " + origin.dmgType + " attack",this.x + 30,this.y + 338);
+                        vars.ctx.fillText("It's: " + origin.weaponType + " weapon",this.x + 30,this.y + 350);
+                        vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 362);
+                        vars.ctx.fillText("It's attack speed: " + origin.cooldown * 10,this.x + 30,this.y + 374);
+                    }if(origin.weaponType === "ranged"){
+                        vars.ctx.fillText(origin.name,this.x + 30,this.y + 314);
+                        vars.ctx.fillText("Has: " + origin.dmg + " damage",this.x + 30,this.y + 326);
+                        vars.ctx.fillText("Has: " + origin.dmgType + " attack",this.x + 30,this.y + 338);
+                        vars.ctx.fillText("It's: " + origin.weaponType + " weapon",this.x + 30,this.y + 350);
+                        vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 362);
+                        vars.ctx.fillText("It's attack speed: " + origin.cooldown * 10,this.x + 30,this.y + 374);
+                    }if(origin.weaponType === "staff"){
+                        vars.ctx.fillText(origin.name,this.x + 30,this.y + 314);
+                        maint.wrapText(vars.ctx,origin.description,this.x + 30,this.y + 326,150,13);
+                    }
+                    vars.ctx.font = "15px Arial";
+                }else if(origin.type === "armor"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("Has: " + origin.def + " defence",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's: " + origin.type,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
+                }else if(origin.type === "helmet"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("Has: " + origin.def + " defence",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's: " + origin.type,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
+                }else if(origin.type === "shield"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("It protect from " + origin.def + " points of damage",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's: " + origin.type,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
+                }else if(origin.type === "ring"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("It buffs " + origin.buff + " stats",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's value: " + origin.buffValue,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
+                }else if(origin.type === "quest"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("You need to find \n" + origin.item.name,this.x + 30,this.y + 335);
+                }else if(origin.type === "consumable"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("When consumed: ",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("" + origin.actions,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
+                    if(maint.isReachable(origin.type.consumes)){
+                        vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 380);
+                    }
+                }else if(origin.type === "questItem"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("When consumed: ",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's quest item",this.x + 30,this.y + 350);
+                }else if(origin.type === "skillBook"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("Use it to learn: ",this.x + 30,this.y + 335);
+                    vars.ctx.fillText(origin.skill.name + "",this.x + 30,this.y + 350);
+                }else if(origin.type === "ammo"){
+                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
+                    vars.ctx.fillText("It's ammo: ",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's amount: " + this.chosen.object.meta.amount,this.x + 30,this.y + 350);
+                    //TODO fix arrows
+                }
+
+                vars.ctx.fill();
+                vars.ctx.closePath();
+
+            }
+
+            //Draw money count and upgrade points
+            vars.ctx.font = "12px Arial";
+            vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
+            vars.ctx.fillText("Money: " + vars.player.money,this.x + 185,this.y + 135);
+            maint.wrapText(vars.ctx,"Available upgrade points: " + vars.player.upgradePoints,this.x + 185,this.y + 195,90,13);
+
+
+            //Draw level
+
+            //Background
+            vars.ctx.fillStyle = "rgba(200,200,200,1.0)";
+            vars.ctx.beginPath();
+            vars.ctx.rect(this.x + 185,this.y + 165,95,10);
+            vars.ctx.closePath();
+            vars.ctx.fill();
+
+            //Front
+            vars.ctx.fillStyle = "rgba(100,100,100,1.0)";
+            vars.ctx.beginPath();
+            vars.ctx.rect(this.x + 185,this.y + 165,95 * vars.player.exp / vars.player.expToNextLevel,10);
+            vars.ctx.closePath();
+            vars.ctx.fill();
+        };
+
+        //Inventory functions
+        /**
+        * Swaps two items by their slot ID's
+        */
+        swapItems = function(id1,id2){
+            if(id1 !== id2){
+                let slot1 = this.getSlot(id1);
+                let slot2 = this.getSlot(id2);
+
+                if(slot1.type === slot2.type || (slot1.type === "item" || slot2.type === "item")){
+                    slot1.object = [slot2.object,slot2.object = slot1.object][0];
+                    //Checking if neither first or second object is chosen
+                    this.chosen = (slot1 === this.chosen || slot2 === this.chosen) ? slot1 : this.chosen;
                 }else{
-                    this.actions[i].action(this);
+                    maint.genTextAlert("This " + slot1.object.name + "doesn't fit here","red",vars);
                 }
             }
-        }
+        };
 
-        //Checking for injuries and beginning health regeneration after 9 seconds
-        if(this.lastHealth === this.hp) {
-            if (this.lastInjury + 9000 < vars.lastTime && this.hp < this.hp / 2) {
-                maint.restoreHealth(this, 0.05);
+        /**
+         * Adds item to inventory not to equipment!
+         * */
+        addItem = function(item){
+            //Checking if item is ammo or is stackable
+
+                let originItem = maint.getItem(item.id,vars);
+                if(item.type === "ammo" || item.isStackable) {
+                    //Searching if there is an item to stack with
+                    for (let value of this.slots) {
+                        if (maint.isReachable(value.object)) {
+                            let originStoredItem = maint.getItem(value.object.id);
+                            if (originItem === originStoredItem) {
+                                if (maint.isReachable(value.object.meta)) {
+                                    value.meta.amount = maint.isReachable(value.object.meta.amount) ? value.meta.amount + item.meta.amount : 1 + item.meta.amount;
+                                    return true;
+                                } else {
+                                    value.meta = {"amount": 1 + item.meta.amount}
+                                    return true;
+                                }
+                            }
+
+                        }
+                    }
+                }
+                //If not found than trying to add item
+                for(let value of this.slots){
+                    if(!maint.isReachable(value.object)){
+                        value.object = item;
+                        return true;
+                    }
+                }
+
+                maint.genTextAlert("You don't have place in your inventory","red",vars);
+
+        };
+
+        /**
+         * Removes any item both from inventory or equipment(be careful)
+         * */
+        removeItem = function(ID){
+            let item = this.getSlot(ID).object;
+            this.chosen.object = item === this.chosen.object ? null : this.chosen.object; //Checking if this item exist in chosen
+            item = null;
+        };
+
+        //Simple getters
+        getPosByID = function(id){
+            let pos = {
+                "x":0,
+                "y":0
+            };
+            //Getting ID of tile in inventory
+            if((id >= 0 && id < 9) && !isNaN(id)){
+                let count = 0;
+                for(let x = 0;x < 3;x++){
+                    for(let y = 0;y < 3;y++){
+                        if(id === count){
+                            pos.x = this.x + 28 + x * this.w;
+                            pos.y = this.y + 127 + y * this.h;
+                            return pos;
+                        }
+                        count++;
+                    }
+                }
+            }else if(isNaN(id) && maint.isReachable(this.equipment[id])){
+                pos.x = this.equipment[id].x;
+                pos.y = this.equipment[id].y;
+                return pos;
+            }else{
+                console.log("Not an ID");
+                return null;
             }
-        }
-        //Checking if player mana changed and regenerating it after 4 seconds
-        if(this.lastMana === this.mana){
-            if(this.lastManaLoose + 4000 < vars.lastTime){
-                maint.restoreMana(this,0.2);
+        };
+
+        //Inventory getters
+        getSlot = function(id){
+            if(!isNaN(id) && id >= 0 && id < this.slots.length){
+                return this.slots[id];
+            }else if(isNaN(id) && maint.isReachable(this.equipment[id])){
+                return this.equipment[id];
+            }else{
+                console.error("Wrong object ID");
+                return null;
             }
-        }else {
-            this.lastManaInjury = vars.lastTime;
-            this.lastMana = this.mana;
-        }
+        };
+
+        //Equipment getters
+        getWeapon = function(){
+            return maint.isReachable(this.equipment.weapon) ? maint.getItem(11,vars) : null; //Getting hands item(yea it's item)
+        };
+        getArmor = function(){
+            return maint.isReachable(this.equipment.armor) ? this.equipment.armor : null;
+        };
+        getHelmet = function(){
+            return maint.isReachable(this.equipment.helmet) ? this.equipment.helmet : null;
+        };
+        getRing = function(){
+            return maint.isReachable(this.equipment.ring) ? this.equipment.ring : null;
+        };
+        getShield = function(){
+            return maint.isReachable(this.equipment.shield) ? this.equipment.shield : null;
+        };
+
 
     };
-    funcs.Player.prototype.movement = function(keys,dt){
-        //Controls
-        //Up and down
-        if (keys.isUpPressed === true) {
-            this.velY = -80;
-        }else if (keys.isDownPressed === true) {
-            this.velY = 80;
-        } else if (!keys.isUpPressed && !keys.isDownPressed) {
-            this.velY = 0;
-        }
-        //Right and left
-        if (keys.isRightPressed === true) {
-            this.velX = -80;
-        }else if (keys.isLeftPressed === true){
-            this.velX = 80;
-        } else if (!keys.isRightPressed && !keys.isLeftPressed) {
+
+
+    //Player class
+    classes.Player = class {
+        //Main constructor
+        constructor(name,id){
+            //Main
+            this.name = name;
+            this.id = id;
+
+            //Initialising variables
+            //Place, size, color and movement
+            this.x = 790;
+            this.y = 390;
             this.velX = 0;
+            this.velY = 0;
+            this.speed = 1;
+            this.size = 12;
+            this.color = "rgba(255,255,255,1.0)";
+
+            //Basic stats
+            this.hp = 10;
+            this.stamina = 10;
+            this.mana = 10;
+            this.maxHp = 10;
+            this.maxStamina = 10;
+            this.maxMana = 10;
+            this.vision = 200;
+
+            //Death and injuries
+            this.lastHealth = this.hp;
+            this.lastMana = this.mana;
+            this.lastStamina = this.stamina;
+            this.lastHealthInjury = 0;
+            this.lastManaInjury = 0;
+            this.lastStaminaInjury = 0;
+            this.isDead = false;
+            this.deathTime = 0;
+
+            //Skills
+            this.level = 1;
+            this.exp = 0;
+            this.expToNextLevel = 0;
+            this.upgradePoints = 0;
+            this.defSkill = 0;
+            this.magicSkill = 0;
+            this.fightingSkill = 0;
+            this.skills = [];
+
+            //Items
+            this.money = 0;
+            this.inventory = new classes.Inventory();
+
+            //Attackbox
+            this.directionX = 0;
+            this.directionY = 1;
+            this.attackBox = null;
+
+            //Attacking
+            this.timeFromLastAttack = 0;
+            this.attack = false;
+            this.isAttackDrawn = false;
+            this.rangedAttackBox = null;
+
+            //Bools
+            this.canMove = true;
+            this.canInteract = true;
+            this.canAttack = true;
+
+            //Other
+            this.quests = [];
+            this.actions = [];
+            this.mount = {};
+            this.hotbar = {"activeId":null,"items":[]};
+
+            //Setting exp for next level by algorithm
+            this.nextLevel();
+
         }
-        //Applying movement
-        this.x += this.velX * dt * maint.getSpeed(this);
-        this.y += this.velY * dt * maint.getSpeed(this);
-        this.speed = 1;
+
+        //Main functions
+        mainActions = function(vars){
+            if(this.canMove){
+                this.movement(vars.events.keys,vars.dt);
+            }if(this.canInteract){
+                this.interactions();
+            }if(this.canAttack){
+                //Reassigning boolean
+                this.attack = vars.events.keys.isAttackPressed;
+                //Reassigning time
+                this.timeFromLastAttack += vars.dt;
+                //Checking, then attacking
+                if(!this.isDead){
+                    if (this.attack === true && this.timeFromLastAttack >= maint.getItem(this.inventory.getWeapon().id,vars).cooldown) {
+                        let temp = false;
+                        let playerWeapon = this.inventory.getWeapon();
+                        if(maint.getItem(playerWeapon.id,vars).weaponType === "melee"){
+                            if (maint.getItem(playerWeapon.id,vars).dmgType === "point") {
+                                maint.checkPlayerThanPointAttack(vars);
+                            } else if (maint.getItem(playerWeapon,vars).dmgType === "area") {
+                                maint.checkPlayerThanAreaAttack(vars);
+                            }
+                            this.timeFromLastAttack = 0;
+                        }
+                        else if(maint.getItem(playerWeapon.id,vars).weaponType === "ranged" && maint.isThereAmmo(this,vars)){
+                            let x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // unchanged
+                            let y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // minus on the Sin
+
+                            let speedX = maint.getVelocityTo(this,{x:x2,y:y2}).x * 250;
+                            let speedY = maint.getVelocityTo(this,{x:x2,y:y2}).y * 250;
+
+                            x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size - 40);
+                            y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size - 40);
+
+                            classes.genProjectile(vars,1,x2,y2,speedX,speedY,false);
+                            this.timeFromLastAttack = 0;
+                        }
+                        else if(maint.getItem(playerWeapon.id,vars).weaponType === "staff"){
+                            this.timeFromLastAttack = maint.getItem(playerWeapon.id,vars).action(this) === true ? 0 : this.timeFromLastAttack;
+                        }
+                        this.isAttackDrawn = true;
+
+                    }
+                    for (let i = 0; i < vars.map.enemies.length; i++){
+                        if (vars.map.enemies[i].isDead === true) {
+                            maint.dropRandom(vars.map.enemies[i],vars);
+                            //For quests
+                            var enem = maint.getEnemy(vars.map.enemies[i].id,vars.enemyTypes);
+                            if(maint.isReachable(this[enem.name + "Counter"])){
+                                this[enem.name + "Counter"]++;
+                            }
+                            vars.map.enemies.splice(i, 1);
+                            i--;
+
+                        }
+                    }
+                }
+            }
+            /*Buffs, debuffs and other temporary effects*/
+            if(this.actions.length > 0){
+                for(let i = 0;i < this.actions.length;i++) {
+                    if(this.actions[i].deployed + this.actions[i].time < vars.lastTime){
+                        this.actions.splice(i,1);
+                        i--;
+                    }else{
+                        this.actions[i].action(this);
+                    }
+                }
+            }
+
+            //Checking for injuries and beginning health regeneration after 9 seconds
+            if(this.lastHealth === this.hp) {
+                if (this.lastInjury + 9000 < vars.lastTime && this.hp < this.hp / 2) {
+                    maint.restoreHealth(this, 0.05);
+                }
+            }
+            //Checking if player mana changed and regenerating it after 4 seconds
+            if(this.lastMana === this.mana){
+                if(this.lastManaLoose + 4000 < vars.lastTime){
+                    maint.restoreMana(this,0.2);
+                }
+            }else {
+                this.lastManaInjury = vars.lastTime;
+                this.lastMana = this.mana;
+            }
+
+            //Checking for death and dropping all inventory items
+            if(this.hp <= 0){
+                this.isDead = true;
+                this.color = "rgba(255,255,255,0.4)";
+                this.deathTime = vars.lastTime;
+                this.hp = this.maxHp / 4;
+
+                for(let value in this.inventory){
+                    if(maint.isReachable(this.inventory[value].object)){
+                        maint.createInTheWorld(this.x,this.y,this.inventory[value].object.id,vars);
+                        this.inventory[value].isEmpty = true;
+                        this.inventory[value].object = null;
+                    }
+                }
+            }
+            //If player dead waiting 15 seconds and then revieving him
+            if(this.isDead === true){
+                if(this.deathTime + 15000 < vars.lastTime){
+                    this.isDead = false;
+                    this.color = "rgba(255,255,255,1.0)";
+                }
+            }
+
+        };
+        movement = function(keys,dt){
+            //Controls
+            //Up and down
+            if (keys.isUpPressed === true) {
+                this.velY = -80;
+            }else if (keys.isDownPressed === true) {
+                this.velY = 80;
+            } else if (!keys.isUpPressed && !keys.isDownPressed) {
+                this.velY = 0;
+            }
+            //Right and left
+            if (keys.isRightPressed === true) {
+                this.velX = -80;
+            }else if (keys.isLeftPressed === true){
+                this.velX = 80;
+            } else if (!keys.isRightPressed && !keys.isLeftPressed) {
+                this.velX = 0;
+            }
+            //Applying movement
+            this.x += this.velX * dt * maint.getSpeed(this);
+            this.y += this.velY * dt * maint.getSpeed(this);
+            this.speed = 1;
+
+        };
+        interactions = function(){
+
+        };
+
+        nextLevel = function(){
+            let level = this.level + 1;
+            this.expToNextLevel = 100 * (level * level) - (100 * level)
+        };
+
 
     };
-    funcs.Player.prototype.interactions = function(){
 
-    };
+
+
+
+
+
     //Like bullet
-    funcs.Delpoyable = function(x,y,vx,vy,id,time) {
+    classes.Delpoyable = function(x,y,vx,vy,id,time) {
         this.x = 0 + x;
         this.y = y;
         this.vx = vx;
@@ -309,7 +691,7 @@ define(["maintenance"],function (maint) {
         this.living = 0;
         this.lastDest = {};
     };
-    funcs.Delpoyable.prototype.update = function (dt,projectileTypes) {
+    classes.Delpoyable.prototype.update = function (dt,projectileTypes) {
         if(maint.isReachable(this.isMovingTowards) && this.isMovingTowards === true){
             this.x += Math.abs(this.vx) * maint.getVelocityTo(this.lastDest,this).x * dt;
             this.y += Math.abs(this.vy) * maint.getVelocityTo(this.lastDest,this).y * dt;
@@ -323,12 +705,12 @@ define(["maintenance"],function (maint) {
         this.living += dt;
 
     };
-    funcs.Delpoyable.prototype.moveTowards = function (x,y) {
+    classes.Delpoyable.prototype.moveTowards = function (x,y) {
         this.lastDest = {"x":x,"y":y};
         this.isMovingTowards = true;
     };
-    funcs.genProjectile = function(vars,id,x,y,vx,vy,moveTowards,destX,destY){
-        vars.map.delpoyables[vars.map.delpoyables.length] = new funcs.Delpoyable(x, y, vx, vy, id, maint.getProjectile(id,vars.projectileTypes).time);
+    classes.genProjectile = function(vars,id,x,y,vx,vy,moveTowards,destX,destY){
+        vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(x, y, vx, vy, id, maint.getProjectile(id,vars.projectileTypes).time);
         if(maint.isReachable(moveTowards) && moveTowards === true && maint.isReachable(destX) && maint.isReachable(destY)){
             vars.map.delpoyables[vars.map.delpoyables.length - 1].moveTowards(destX,destY);
         }
@@ -336,7 +718,7 @@ define(["maintenance"],function (maint) {
 
     //Menus
     //Shop
-    funcs.Shop = function(items,x,y,type,money,keeper){
+    classes.Shop = function(items,x,y,type,money,keeper){
         this.items = items;
         this.x = x;
         this.y = y;
@@ -353,7 +735,7 @@ define(["maintenance"],function (maint) {
         this.money = money;
         this.keeper = keeper;
     };
-    funcs.Shop.prototype.drawShop = function (vars){
+    classes.Shop.prototype.drawShop = function (vars){
         vars.ctx.drawImage(vars.shopSprite,this.x,this.y);
         var count = 0;
         for(var i = this.pos;i < this.pos + 4;i++){
@@ -380,7 +762,7 @@ define(["maintenance"],function (maint) {
         vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
         maint.wrapText(vars.ctx,this.keeper.name + "'s money: " + this.keeper.money,this.x + 20,this.y + 30,100,10);
     };
-    funcs.Shop.prototype.updateShop = function (vars){
+    classes.Shop.prototype.updateShop = function (vars){
         if(vars.events.isWheel === true){
             if( vars.mouseX > this.x && vars.mouseX < this.x + this.w && vars.mouseY > this.y && vars.mouseY < this.y + this.h){
                 if(vars.events.deltaY > 0 && this.pos + 1 <= this.items.length){
@@ -392,54 +774,61 @@ define(["maintenance"],function (maint) {
                 }
             }
         }
-        for(var i = 0;i < 4;i++) {
+        for(let i = 0;i < 4;i++) {
             if(vars.events.isLeftMouseReleased && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
                 if(vars.player.money >= this.items[i + this.pos].cost){
-                    var isChecked = null;
-                    var item = this.items[i + this.pos];
-                    jQuery.each(vars.player.inventory,function (index,value) {
-                        if(value.isEmpty){
+
+                    let isChecked = null;
+                    let item = this.items[i + this.pos];
+                    //Checking if player has space in inventory
+                    for(let index in vars.player.inventory){
+                        let value  = vars.player.inventory[index];
+
+                        if(!maint.isReachable(value.object)){
                             isChecked =  + index;
                             return true;
                         }
-                    });
-                        if(maint.getItem(item.id,vars).type !== "ammo" && maint.isReachable(isChecked)){
-                            vars.player.inventory[isChecked].isEmpty = false;
-                            vars.player.inventory[isChecked].object = {};
-                            vars.player.inventory[isChecked].object.id = item.id;
-                            vars.player.inventory[isChecked].object.x = 0;
-                            vars.player.inventory[isChecked].object.y = 0;
-                            vars.player.inventory[isChecked].object.inventoryId = isChecked;
-                            vars.player.money -= item.cost;
-                            this.keeper.money += item.cost;
-                        }else if(maint.getItem(item.id,vars).type === "ammo"){
-                            var ir = true;
-                            for (var u = 0; u < 9; u++) {
-                                if (vars.player.inventory[u].isEmpty === false && maint.isReachable(maint.getItem(vars.player.inventory[u].object.id,vars).ammoFor) && maint.getItem(vars.player.inventory[u].object.id,vars).ammoFor === item.ammoFor) {
-                                    vars.player.inventory[u].object.amount += item.meta.amount;
+                    }
+
+                    if(maint.getItem(item.id,vars).type !== "ammo" && maint.isReachable(isChecked)){
+                        vars.player.inventory[isChecked].object = {};
+                        vars.player.inventory[isChecked].object.id = item.id;
+                        vars.player.inventory[isChecked].object.x = 0;
+                        vars.player.inventory[isChecked].object.y = 0;
+
+                        //Money operations
+                        vars.player.money -= item.cost;
+                        this.keeper.money += item.cost;
+                    }else if(maint.getItem(item.id,vars).type === "ammo"){
+                        let ir = true;
+                        //Adding amount of arrows to slot with same ammo
+                        for (let u = 0; u < 9; u++) {
+                            if (vars.player.inventory[u].isEmpty === false && maint.isReachable(maint.getItem(vars.player.inventory[u].object.id,vars).ammoFor) && maint.getItem(vars.player.inventory[u].object.id,vars).ammoFor === item.ammoFor) {
+                                vars.player.inventory[u].object.amount += item.meta.amount;
+                                ir = false;
+                                break;
+                            }
+                        }
+                        //Adding new item to a new slot
+                        if(ir){
+                            for (let w = 0; w < 9; w++) {
+                                if (vars.player.inventory[w].isEmpty) {
+                                    vars.player.inventory[w].isEmpty = false;
+                                    vars.player.inventory[w].object = {"inventoryId":w,"id":item.id,"amount":maint.isReachable(item.amount) ? item.amount : null};
                                     ir = false;
                                     break;
                                 }
                             }
-                            if(ir){
-                                for (var w = 0; w < 9; w++) {
-                                    if (vars.player.inventory[w].isEmpty) {
-                                        vars.player.inventory[w].isEmpty = false;
-                                        vars.player.inventory[w].object = {"inventoryId":w,"id":item.id,"amount":maint.isReachable(item.amount) ? item.amount : null};
-                                        ir = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            vars.player.money -= item.cost;
-                            this.keeper.money += item.cost;
-                        }else{
-                            maint.genTextAlert("Your inventory is full","rgba(255,200,200,1.0)",vars);
-                            break;
                         }
-
-
+                        vars.player.money -= item.cost;
+                        this.keeper.money += item.cost;
+                    }else{
+                        maint.genTextAlert("Your inventory is full","rgba(255,200,200,1.0)",vars);
                         break;
+                    }
+
+
+                    break;
 
 
                 }else{
@@ -452,8 +841,8 @@ define(["maintenance"],function (maint) {
     };
 
     //Upgrade stats
-    funcs.UpgradeMenu = function(vars) {
-        this.sprite = new funcs.Sprite([{"px":0,"py":0,"pw":vars.upgradeMenuSprite.width,"ph":vars.upgradeMenuSprite.height,"w":vars.upgradeMenuSprite.width,"h":vars.upgradeMenuSprite.height}],vars.upgradeMenuSprite);
+    classes.UpgradeMenu = function(vars) {
+        this.sprite = new classes.Sprite([{"px":0,"py":0,"pw":vars.upgradeMenuSprite.width,"ph":vars.upgradeMenuSprite.height,"w":vars.upgradeMenuSprite.width,"h":vars.upgradeMenuSprite.height}],vars.upgradeMenuSprite);
         this.x = 200;
         this.y = 200;
         this.type = "upgrade";
@@ -462,10 +851,10 @@ define(["maintenance"],function (maint) {
         this.mana    = {"x":154,"y":88,"w":35,"h":12};
 
     };
-    funcs.UpgradeMenu.prototype.drawUpgrades = function(vars) {
+    classes.UpgradeMenu.prototype.drawUpgrades = function(vars) {
         this.sprite.draw(vars.gameTime,vars.ctx,this.x,this.y);
     };
-    funcs.UpgradeMenu.prototype.updateUpgradeMenu = function(vars) {
+    classes.UpgradeMenu.prototype.updateUpgradeMenu = function(vars) {
         if(vars.events.isLeftMouseReleased){
             if(vars.mouseX > this.x && vars.mouseX < this.x + 204 && vars.mouseY > this.y + 66 && vars.mouseY < this.y + 143) {
                 if (vars.player.upgradePoints > 0 && vars.mouseX > this.health.x + this.x && vars.mouseX < this.health.x + this.health.w + this.x && vars.mouseY > this.health.y + this.y && vars.mouseY < this.health.y + this.health.h + this.y) {
@@ -491,7 +880,7 @@ define(["maintenance"],function (maint) {
     };
 
 
-    funcs.isShopOpened = function(menues) {
+    classes.isShopOpened = function(menues) {
         var temp = false;
         jQuery.each(menues,function (index,value) {
             if(maint.isReachable(value) && value.menu.type === "shop"){
@@ -501,7 +890,7 @@ define(["maintenance"],function (maint) {
         });
         return temp;
     };
-    funcs.findShop = function(menues) {
+    classes.findShop = function(menues) {
         var temp = null;
         jQuery.each(menues,function (index,value) {
             if(value.menu.type === "shop"){
@@ -511,7 +900,7 @@ define(["maintenance"],function (maint) {
         });
         return temp;
     };
-    funcs.findShopById = function(id,menues) {
+    classes.findShopById = function(id,menues) {
         var temp = null;
         jQuery.each(menues,function (index,value) {
             if(value.id === id){
@@ -521,7 +910,7 @@ define(["maintenance"],function (maint) {
         });
         return temp;
     };
-    funcs.findNpcByShopId = function(id,npcs) {
+    classes.findNpcByShopId = function(id,npcs) {
         var temp = null;
         jQuery.each(npcs,function (index,value) {
             if(index === id){
@@ -533,7 +922,7 @@ define(["maintenance"],function (maint) {
     };
 
     //Quests
-    funcs.Quest = function(name,desc,loot,action){
+    classes.Quest = function(name,desc,loot,action){
         this.name = name;
         this.description = desc;
         this.checking = action;
@@ -542,7 +931,7 @@ define(["maintenance"],function (maint) {
     };
 
 
-    funcs.Tile = function(tx, ty, tt) {
+    classes.Tile = function(tx, ty, tt) {
         this.x = tx;
         this.y = ty;
         this.type = tt;
@@ -552,7 +941,7 @@ define(["maintenance"],function (maint) {
         this.itemStack = null;
     };
 
-    funcs.Map = function(tileW,tileH) {
+    classes.Map = function(tileW,tileH) {
         this.map = [];
         this.w = 0;
         this.h = 0;
@@ -564,7 +953,7 @@ define(["maintenance"],function (maint) {
         this.delpoyables = [];
         this.spawners = [];
     };
-    funcs.Map.prototype.build = function (data,w,h) {
+    classes.Map.prototype.build = function (data,w,h) {
         this.w = w;
         this.h = h;
 
@@ -581,7 +970,7 @@ define(["maintenance"],function (maint) {
     };
 
     //Camera functions
-    funcs.Rectangle = function(left, top, width, height){
+    classes.Rectangle = function(left, top, width, height){
         this.left = left || 0;
         this.top = top || 0;
         this.width = width || 0;
@@ -589,7 +978,7 @@ define(["maintenance"],function (maint) {
         this.right = this.left + this.width;
         this.bottom = this.top + this.height;
     };
-    funcs.Rectangle.prototype.set = function(left, top, /*optional*/width, /*optional*/height){
+    classes.Rectangle.prototype.set = function(left, top, /*optional*/width, /*optional*/height){
         this.left = left;
         this.top = top;
         this.width = width || this.width;
@@ -597,13 +986,13 @@ define(["maintenance"],function (maint) {
         this.right = (this.left + this.width);
         this.bottom = (this.top + this.height);
     };
-    funcs.Rectangle.prototype.within = function(r) {
+    classes.Rectangle.prototype.within = function(r) {
         return (r.left <= this.left &&
             r.right >= this.right &&
             r.top <= this.top &&
             r.bottom >= this.bottom);
     };
-    funcs.Rectangle.prototype.overlaps = function(r) {
+    classes.Rectangle.prototype.overlaps = function(r) {
         return (this.left < r.right &&
             r.left < this.right &&
             this.top < r.bottom &&
@@ -614,7 +1003,7 @@ define(["maintenance"],function (maint) {
 
     //Camera
     // Camera constructor
-    funcs.Camera = function(xView, yView, canvasWidth, canvasHeight, worldWidth, worldHeight){
+    classes.Camera = function(xView, yView, canvasWidth, canvasHeight, worldWidth, worldHeight){
         // possibles axis to move the camera
         this.AXIS = {
             NONE: "none",
@@ -641,19 +1030,19 @@ define(["maintenance"],function (maint) {
         this.followed = null;
 
         // rectangle that represents the viewport
-        this.viewportRect = new funcs.Rectangle(this.xView, this.yView, this.wView, this.hView);
+        this.viewportRect = new classes.Rectangle(this.xView, this.yView, this.wView, this.hView);
 
         // rectangle that represents the world's boundary (room's boundary)
-        this.worldRect = new funcs.Rectangle(0, 0, worldWidth, worldHeight);
+        this.worldRect = new classes.Rectangle(0, 0, worldWidth, worldHeight);
 
     };
     // gameObject needs to have "x" and "y" properties (as world(or room) position)
-    funcs.Camera.prototype.follow = function(gameObject, xDeadZone, yDeadZone){
+    classes.Camera.prototype.follow = function(gameObject, xDeadZone, yDeadZone){
         this.followed = gameObject;
         this.xDeadZone = xDeadZone;
         this.yDeadZone = yDeadZone;
     };
-    funcs.Camera.prototype.update = function(){
+    classes.Camera.prototype.update = function(){
         // keep following the player (or other desired object)
         if(this.followed != null){
             if(this.axis === this.AXIS.HORIZONTAL || this.axis === this.AXIS.BOTH)
@@ -694,5 +1083,5 @@ define(["maintenance"],function (maint) {
 
     };
 
-    return funcs;
+    return classes;
 });

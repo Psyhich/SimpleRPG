@@ -16,6 +16,7 @@ define([],function () {
     //For loading
     vars.loaded = 0;
     vars.shouldLoad = 25;
+    vars.shouldLoad = 25;
 
     //Event and configuration system
     vars.events = {
@@ -31,7 +32,7 @@ define([],function () {
         "isLeftMouseReleased":false,
         "isRightMousePressed":false,
         "isRightMouseReleased":false,
-        "isMouthWithInv":false,
+        "isMouseWithInv":false,
         "isInvBarWithMouse":false,
         "isWheel":false,
         "keys":{
@@ -98,7 +99,6 @@ define([],function () {
     //Mouse
     vars.mouseX = null;
     vars.mouseY = null;
-    vars.invShouldFollow = null;
 
     //For game play
     vars.isPhone = false;

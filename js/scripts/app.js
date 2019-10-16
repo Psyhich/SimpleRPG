@@ -7,7 +7,6 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
         var allClasses = classes;
         mainMeth.load(vars);
 
-        //console.log("Loaded");
         var checkExis = setInterval(function() {
             if (vars.isLoaded) {
                 console.log("Exists!");

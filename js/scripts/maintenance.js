@@ -204,35 +204,7 @@ define([],function () {
 
     //Inventory functions
     maint.getPosById = function(id,vars) {
-        var v = {
-            "x":0,
-            "y":0
-        };
-        if((id >= 0 && id < 9) && !isNaN(id)){
 
-            var count = 0;
-            for(var x = 0;x < 3;x++){
-                for(var y = 0;y < 3;y++){
-                    if(id === count){
-                        v.x = vars.inventory.x + 28 + x * vars.inventory.w;
-                        v.y = vars.inventory.y + 127 + y * vars.inventory.h;
-                        return v;
-                    }
-                    count++;
-                }
-            }
-        }else if(isNaN(id)){
-            jQuery.each(vars.player.equipment,function (index,value){
-                if(id === value.type){
-                    v.x = value.x;
-                    v.y = value.y;
-                }
-            });
-            return v;
-        }else{
-            console.log("Not an ID");
-            return null;
-        }
     };
 
     //Monster drops
@@ -242,14 +214,14 @@ define([],function () {
             maint.createInTheWorld(enemy.x,enemy.y,drop.id,vars);
         }
         if(maint.isReachable(maint.getEnemy(enemy.id,vars.enemyTypes).exp)){
-            var temp = jQuery.extend(true,{},vars.sExp);
+            let temp = jQuery.extend(true,{},vars.sExp);
             temp.x = enemy.x;
             temp.y = enemy.y;
             temp.count = maint.getEnemy(enemy.id,vars.enemyTypes).exp;
             maint.createInTheWorld(temp.x - 3,temp.y,temp.id,vars);
             vars.map.items[vars.map.items.length - 1].count = temp.count;
         }if(maint.isReachable(maint.getEnemy(enemy.id,vars.enemyTypes).money)){
-            var temp = jQuery.extend(true,{},vars.sMoney);
+            let temp = jQuery.extend(true,{},vars.sMoney);
             temp.type = "money";
             temp.x = enemy.x;
             temp.y = enemy.y;
@@ -353,7 +325,7 @@ define([],function () {
     //Defence
     maint.getDef = function(user){
         let def = 0;
-        for(var i = 0;i < user.equipment.length;i++){
+        for(var i = 0;i < user.inventory.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object) && user.equipment[i].type !== "shield"){
                 def += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).def) ? maint.getItem(user.equipment[i].object.id,vars).def : 0;
             }
@@ -363,7 +335,7 @@ define([],function () {
     };
     maint.getFullDef = function(user) {
         let def = 0;
-        for(let i = 0;i < user.equipment.length;i++){
+        for(let i = 0;i < user.inventory.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object) && maint.isReachable(user.equipment[i].object)){
                 def += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).def) ? maint.getItem(user.equipment[i].object.id,vars).def : 0;
             }
@@ -374,7 +346,7 @@ define([],function () {
     //Attack
     maint.getAttack = function(user) {
         let attack = 0;
-        for(let i = 0;i < user.equipment.length;i++){
+        for(let i = 0;i < user.inventory.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
                 attack += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).dmg) ? maint.getItem(user.equipment[i].object.id,vars).dmg : 0;
             }
@@ -385,7 +357,7 @@ define([],function () {
     maint.getResist = function(user,resist) {
         let resistNum = 0;
         let resistance = resist + "Resist";
-        for(let i = 0;i < user.equipment.length;i++){
+        for(let i = 0;i < user.inventory.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
                 resistNum += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars)[resistance]) ? maint.getItem(user.equipment[i].object.id,vars)[resistance] : 0;
             }
@@ -395,7 +367,7 @@ define([],function () {
     //Speed
     maint.getSpeed = function(user){
         let speed = 0;
-        for(let i = 0;i < user.equipment.length;i++){
+        for(let i = 0;i < user.inventory.equipment.length;i++){
             if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
                 speed += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).spd) ? maint.getItem(user.equipment[i].object.id,vars).spd : 0;
             }
