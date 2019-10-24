@@ -1,4 +1,4 @@
-define([],function () {
+define(["itemList"],function (itemsList) {
     let maint = {};
     //General func
     maint.isReachable = function(item) {
@@ -53,6 +53,7 @@ define([],function () {
             vars.player.attackBox = 6;
         }
     };
+
     maint.setPlayerRangedAttackBox = function(player){
         var ranged = player.attackBox;
         switch (ranged) {
@@ -75,13 +76,17 @@ define([],function () {
         }
         return ranged;
     };
+
     //Player attacking
     maint.checkPlayerThanPointAttack = function(vars){
-        var minHp = 0;
-        var indexOfEnemy = null;
+        let minHp = 0;
+        let indexOfEnemy = null;
+
+
 
         jQuery.each(vars.map.enemies,function (index,value) {
-            if(value.isDead === false && maint.circleToRectIntersection(value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size,vars.playerAttackBox.x,vars.playerAttackBox.y,vars.playerAttackBox.w,vars.playerAttackBox.h)){
+            if(value.isDead === false &&
+                maint.circleToRectIntersection(value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size,vars.playerAttackBox.x,vars.playerAttackBox.y,vars.playerAttackBox.w,vars.playerAttackBox.h)){
                 if(value.hp <= minHp){
                     minHp = value.hp;
                     indexOfEnemy = index;
@@ -93,24 +98,37 @@ define([],function () {
         });
 
         if(maint.isReachable(indexOfEnemy) ){
-            if(maint.getDef(vars.map.enemies[indexOfEnemy]) < vars.player.weapon.dmg){
-                vars.map.enemies[indexOfEnemy].hp -= (vars.player.weapon.dmg - maint.getDef(vars.map.enemies[indexOfEnemy]));
-                maint.genFloatingNumber(vars.map.enemies[indexOfEnemy].x,vars.map.enemies[indexOfEnemy].y,(vars.player.weapon.dmg - maint.getDef(vars.map.enemies[indexOfEnemy])),"rgba(0,0,0,1.0)",15,vars)
-            }else if(maint.getDef(vars.map.enemies[indexOfEnemy]) >= vars.player.weapon.dmg){
-                vars.map.enemies[indexOfEnemy].hp -= 1;
-                maint.genFloatingNumber(vars.map.enemies[indexOfEnemy].x,vars.map.enemies[indexOfEnemy].y,1,"rgba(0,0,0,1.0)",15)
+            let playerAttack = maint.getAttack(vars.player);
+            let enemyDef = maint.getDef(vars.map.enemies[indexOfEnemy]);
+            let enemy = vars.map.enemies[indexOfEnemy];
+
+
+            if(enemyDef < playerAttack){
+                enemy.hp -= (playerAttack - enemyDef);
+                maint.genFloatingNumber(enemy.x,enemy.y,(playerAttack - enemyDef),"rgba(0,0,0,1.0)",15,vars)
+            }else if(enemyDef >= playerAttack){
+                enemy.hp -= 1;
+                maint.genFloatingNumber(enemy.x,enemy.y,1,"rgba(0,0,0,1.0)",15)
             }
-            if(vars.map.enemies[indexOfEnemy].hp <= 0){vars.map.enemies[indexOfEnemy].isDead = true;}
+            if(enemy.hp <= 0){enemy.isDead = true;}
         }
 
     };
+
     maint.checkPlayerThanAreaAttack = function(vars){
         jQuery.each(vars.map.enemies,function (index,value) {
-            if(!value.isDead && maint.circleToRectIntersection(value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size,vars.playerAttackBox.x,vars.playerAttackBox.y,vars.playerAttackBox.w,vars.playerAttackBox.h)){
-                if(maint.getDef(value) < maint.getItem(vars.player.weapon.id,vars).dmg){
-                    value.hp -= maint.getItem(vars.player.weapon.id,vars).dmg - maint.getDef(value);
-                    maint.genFloatingNumber(value.x,value.y,(maint.getItem(vars.player.weapon.id,vars).dmg - maint.getDef(value)),"rgba(0,0,0,1.0)",15,vars);
-                }else if(maint.getDef(value) >= maint.getItem(vars.player.weapon.id,vars).dmg){
+            if(
+                !value.isDead &&
+                maint.circleToRectIntersection(value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size,vars.playerAttackBox.x,vars.playerAttackBox.y,vars.playerAttackBox.w,vars.playerAttackBox.h)
+            ){
+                let playerAttack = maint.getAttack(vars.player);
+                let enemyDefence = maint.getDef(value);
+
+                if(enemyDefence < playerAttack){
+                    value.hp -= playerAttack - enemyDefence;
+                    maint.genFloatingNumber(value.x,value.y,(playerAttack - enemyDefence),"rgba(0,0,0,1.0)",15,vars);
+
+                }else if(enemyDefence >= playerAttack){
                     value.hp -= 1;
                     maint.genFloatingNumber(value.x,value.y,1,"rgba(0,0,0,1.0)",15)
                 }
@@ -127,6 +145,7 @@ define([],function () {
             }
         }
     };
+
 
     maint.makeSpriteSheetArayInLine = function(count,img) {
         var buffMass = [];
@@ -149,26 +168,22 @@ define([],function () {
         return jQuery.extend(true,{},value);
     };
 
-    //Getters for enemies, items, projectiles
-    //Items
-    maint.getItem = function(id,vars){return maint.isReachable(vars.itemTypes[id]) ? vars.itemTypes[id] : null;};
     maint.createInTheWorld = function(x,y,id,vars,other){
-        var temp = {"x":x,"y":y,"id":id};
-        if(maint.getItem(id,vars).meta){
-            var meta = maint.getItem(id,vars).meta;
-            for(var i in meta){
+        let temp = {"x":x,"y":y,"id":id};
+        if(itemsList.getItem(id).meta){
+            let meta = itemsList.getItem(id).meta;
+            for(let i in meta){
                 temp[i] = meta[i];
             }
         }
         vars.map.items[vars.map.items.length] = temp;
         if(maint.isReachable(other)){
-            for(var i in other){
+            for(let i in other){
                 temp[i] = other[i];
             }
         }
     };
-    //Enemies
-    maint.getEnemy = function(id,enemyTypes){return enemyTypes[id];};
+
     maint.genEnemy = function(id,x,y,vars) {
         var temp = maint.getEnemy(id,vars.enemyTypes);
         vars.map.enemies[vars.map.enemies.length] = {
@@ -189,12 +204,18 @@ define([],function () {
             "timeFromLastAttack": 0,
         };
     };
+
+    //Getters for enemies, items, projectiles
+    //Items
+    maint.getItem = function(id,vars){return maint.isReachable(vars.itemTypes[id]) ? vars.itemTypes[id] : null;};
+
+    //Enemies
+    maint.getEnemy = function(id,enemyTypes){return enemyTypes[id];};
+
     //Projectiles
     maint.getProjectile = function(id,projectileTypes){return projectileTypes[id];};
     //Skills
     maint.getSkill = function(id,skillTypes){return skillTypes[id];};
-    //Quests
-    maint.getQuest = function(id,questTypes){return questTypes[id];};
 
 
     //Map and tiles
@@ -256,8 +277,13 @@ define([],function () {
 
     //Save games
     maint.loadGame = function(camera,vars) {
-        var temp = JSON.parse(localStorage.getItem("saveGame"));
-        if(maint.isReachable(temp) && maint.isReachable(temp.player) && maint.isReachable(temp.map) && maint.isReachable(temp.config)){
+        let temp = JSON.parse(localStorage.getItem("saveGame"));
+        if(
+            maint.isReachable(temp) &&
+            maint.isReachable(temp.player) &&
+            maint.isReachable(temp.map) &&
+            maint.isReachable(temp.config)
+        ){
             vars.player = temp.player;
             vars.map = temp.map;
             vars.isLoadedFromSaveGame = true;
@@ -279,7 +305,12 @@ define([],function () {
     //In game things
     //Floating numbers
     maint.genFloatingNumber = function(x,y,number,color,size,vars){
-        if(maint.isReachable(x) && maint.isReachable(y) && maint.isReachable(number) && maint.isReachable(color)){
+        if(
+            maint.isReachable(x) &&
+            maint.isReachable(y) &&
+            maint.isReachable(number) &&
+            maint.isReachable(color)
+        ){
             vars.flotNumb[vars.flotNumb.length] = {
                 "x":x,
                 "y":y,
@@ -295,7 +326,11 @@ define([],function () {
 
     //Text alerts
     maint.genTextAlert = function(text,color,vars) {
-        if(maint.isReachable(text) && maint.isReachable(color) && vars.config.alerts){
+        if(
+            maint.isReachable(text) &&
+            maint.isReachable(color) &&
+            vars.config.alerts
+        ){
             vars.inGameAlerts[vars.inGameAlerts.length] = {
                 "text":text,
                 "time":0,
@@ -325,9 +360,13 @@ define([],function () {
     //Defence
     maint.getDef = function(user){
         let def = 0;
-        for(var i = 0;i < user.inventory.equipment.length;i++){
-            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object) && user.equipment[i].type !== "shield"){
-                def += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).def) ? maint.getItem(user.equipment[i].object.id,vars).def : 0;
+        for(let i = 0;i < user.inventory.equipment.length;i++){
+            if(
+                maint.isReachable(user.equipment[i]) &&
+                maint.isReachable(user.equipment[i].object
+                ) && user.equipment[i].type !== "shield"
+            ){
+                def += maint.isReachable(itemsList.getItem(user.equipment[i].object.id).def) ? itemsList.getItem(user.equipment[i].object.id).def : 0;
             }
         }
         def += maint.isReachable(user.def) ? user.def : 0;
@@ -336,8 +375,12 @@ define([],function () {
     maint.getFullDef = function(user) {
         let def = 0;
         for(let i = 0;i < user.inventory.equipment.length;i++){
-            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object) && maint.isReachable(user.equipment[i].object)){
-                def += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).def) ? maint.getItem(user.equipment[i].object.id,vars).def : 0;
+            if(
+                maint.isReachable(user.equipment[i]) &&
+                maint.isReachable(user.equipment[i].object) &&
+                maint.isReachable(user.equipment[i].object)
+            ){
+                def += maint.isReachable(itemsList.getItem(user.equipment[i].object.id).def) ? itemsList.getItem(user.equipment[i].object.id).def : 0;
             }
         }
         def += maint.isReachable(user.def) ? user.def : 0;
@@ -347,8 +390,11 @@ define([],function () {
     maint.getAttack = function(user) {
         let attack = 0;
         for(let i = 0;i < user.inventory.equipment.length;i++){
-            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
-                attack += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).dmg) ? maint.getItem(user.equipment[i].object.id,vars).dmg : 0;
+            if(
+                maint.isReachable(user.equipment[i]) &&
+                maint.isReachable(user.equipment[i].object)
+            ){
+                attack += maint.isReachable(itemsList.getItem(user.equipment[i].object.id).dmg) ? itemsList.getItem(user.equipment[i].object.id).dmg : 0;
             }
         }
         return attack;
@@ -358,8 +404,11 @@ define([],function () {
         let resistNum = 0;
         let resistance = resist + "Resist";
         for(let i = 0;i < user.inventory.equipment.length;i++){
-            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
-                resistNum += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars)[resistance]) ? maint.getItem(user.equipment[i].object.id,vars)[resistance] : 0;
+            if(
+                maint.isReachable(user.equipment[i]) &&
+                maint.isReachable(user.equipment[i].object)
+            ){
+                resistNum += maint.isReachable(itemsList.getItem(user.equipment[i].object.id)[resistance]) ? itemsList.getItem(user.equipment[i].object.id)[resistance] : 0;
             }
         }
         return resistNum;
@@ -368,8 +417,11 @@ define([],function () {
     maint.getSpeed = function(user){
         let speed = 0;
         for(let i = 0;i < user.inventory.equipment.length;i++){
-            if(maint.isReachable(user.equipment[i]) && maint.isReachable(user.equipment[i].object)){
-                speed += maint.isReachable(maint.getItem(user.equipment[i].object.id,vars).spd) ? maint.getItem(user.equipment[i].object.id,vars).spd : 0;
+            if(
+                maint.isReachable(user.equipment[i]) &&
+                maint.isReachable(user.equipment[i].object)
+            ){
+                speed += maint.isReachable(itemsList.getItem(user.equipment[i].object.id).spd) ? itemsList.getItem(user.equipment[i].object.id).spd : 0;
             }
         }
         speed += maint.isReachable(user.speed) ? user.speed : 0;
@@ -617,14 +669,16 @@ define([],function () {
     };
 
     //For weapons interactions
-    maint.isThereAmmo = function(player,vars){
-        var weapon = maint.getItem(player.weapon.id,vars);
-        for(var i = 0;i < 8;i++){
-            var temp = maint.isReachable(player.inventory[i].object) ? maint.getItem(player.inventory[i].object.id,vars) : null;
+    maint.isThereAmmo = function(player){
+        let weapon = itemsList.getItem(player.weapon.id);
+        for(let i = 0;i < 8;i++){
+            let temp = maint.isReachable(player.inventory[i].object) ? itemsList.getItem(player.inventory[i].object.id) : null;
+
             if(maint.isReachable(temp)
                 && maint.isReachable(player.inventory[i].object.amount)
                 && temp.ammoFor === weapon.id
-                && player.inventory[i].object.amount > 0){
+                && player.inventory[i].object.amount > 0
+            ){
                 player.inventory[i].object.amount--;
                 return true;
             }

@@ -1,46 +1,9 @@
-define(["classes","jquery","map"],function (classes,jQuery,map) {
+define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsList) {
     let func = {};
     //Load
     func.load = function(vars){
-        //vars.loaded = 0;
-
         vars.canvas = document.getElementById('canvas');
         vars.ctx = canvas.getContext('2d');
-        vars.loaded++;
-        //Loader
-        loadImages([
-            "acceptButtonSprite",
-            "shopSprite",
-            "alertSprite",
-            "tilesSprite",
-            "bookSprites",
-            "skillsSprite",
-            "expSprite",
-            "moneySprites",
-            "consumablesSprite",
-            "swordsSpriteSheet",
-            "inventorySprite",
-            "armorSprites",
-            "playerUISprite",
-            "shieldsSprite",
-            "questItemsSprite",
-            "scrollSprite",
-            "playerHotbarSprite",
-            "skillsMenuSprite",
-            "upgradeMenuSprite",
-            "bowsSprites",
-            "arrowsSprite",
-            "radiosSprite",
-            "configsSprite",
-            "menuSprite",
-            "staffsSprite"],function () {
-            vars.isLoaded = true;
-        },vars);
-        let checkExist = setInterval(function() {
-            if (vars.isLoaded) {
-                clearInterval(checkExist);
-            }
-        }, 100);
     };
 
     //Run includes create & update & render
@@ -246,750 +209,23 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         //Upgrade menu UI
         vars.upgradeMenu = {"isOpened":false,"menu":new classes.UpgradeMenu(vars)};
 
-        //Creating arrays and objects
-        let itemArea;
-        itemArea = maint.makeSpriteSheetArayInLine(6,vars.swordsSpriteSheet);
-        //Swords array
-        for(let i = 0;i < 6;i++){
-            vars.swords[i] = {
-                "x":i * itemArea[i].w,
-                "y":0,
-                "dmg":i * 4,
-                "isMelee":true,
-                "px":i * itemArea[i].pw,
-                "py":0,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].h,
-                "w":itemArea[i].pw/2,
-                "h":itemArea[i].h/2,
-                "img":vars.swordsSpriteSheet,
-                "type":"weapon"
-            };
-        }
-        //Bows
-        itemArea = maint.makeSpriteSheetArayInLine(15,vars.bowsSprites);
-        for(let i = 0;i < 5;i++){
-            vars.bows[i] = {
-                "img":vars.armorSprites,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "type":"bow"
-            };
-        }
-        //Making armors
-        itemArea = maint.makeSpriteSheetArayInLine(10,vars.armorSprites);
-        //Helmets array
-        for(let i = 0;i < 5;i++){
-            vars.helmets[i] = {
-                "img":vars.armorSprites,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "type":"helmet"
-            };
-        }
-        //Chestplates array
-        for(let i = 5;i < 9;i++){
-            vars.chestPlates[i - 5] = {
-                "img":itemArea[i].img,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "type":"armor"
-            };
-        }
-        //Shields array
-        itemArea = maint.makeSpriteSheetArayInLine(10,vars.shieldsSprite);
-        for(let i = 0;i < itemArea.length;i++){
-            vars.shields[i] = {
-                "img":vars.shieldsSprite,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "type":"shield"
-            };
-        }
-        //Quest items array
-        itemArea = maint.makeSpriteSheetArayInLine(6,vars.questItemsSprite);
-        for(let i = 0;i < 6;i++){
-            vars.cQuestItems[i] = {
-                "img":itemArea[i].img,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "w":itemArea[i].pw,
-                "h":itemArea[i].ph,
-                "type":"questItem"
-            };
-        }
-        //Consumables array
-        itemArea = maint.makeSpriteSheetArayInLine(32,vars.consumablesSprite);
-        for(let i = 0;i < 32;i++){
-            vars.consumables[i] = {
-                "img":itemArea[i].img,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "w":itemArea[i].pw,
-                "h":itemArea[i].ph,
-                "type":"consumable"
-            };
-        }
-        //Money array))
-        itemArea = maint.makeSpriteSheetArayInLine(25,vars.moneySprites);
-        for(let i = 0;i < itemArea.length;i++){
-            vars.money[i] = {
-                "img":itemArea[i].img,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "w":itemArea[i].pw,
-                "h":itemArea[i].ph,
-                "type":"money",
-                "count":0
-            };
-        }
-        //Arrows array
-        itemArea = maint.makeSpriteSheetArayInLine(15,vars.arrowsSprite);
-        for(let i = 0;i < itemArea.length;i++){
-            vars.arrows[i] = {
-                "img":itemArea[i].img,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "w":itemArea[i].pw,
-                "h":itemArea[i].ph,
-                "type":"ammo",
-                "count":0
-            };
-        }
-        //Staffs
-        itemArea = maint.makeSpriteSheetArayInLine(15,vars.staffsSprite);
-        for(let i = 0;i < itemArea.length;i++){
-            vars.staffs[i] = {
-                "img":itemArea[i].img,
-                "px":itemArea[i].px,
-                "py":itemArea[i].py,
-                "pw":itemArea[i].pw,
-                "ph":itemArea[i].ph,
-                "w":itemArea[i].pw,
-                "h":itemArea[i].ph,
-                "type":"staff",
-                "count":0
-            };
-        }
+
 
 
 
         //Enemy moving functions
-        let zombieMoving = function (dt,zombie) {
-            //if(events.isPlayerMoving || events.isShouldMoveEnemies || !events.isPlayerStopped){
-
-            zombie.velX = 0;
-            zombie.velY = 0;
-            if(vars.player.isDead === false && Math.sqrt(Math.pow(vars.player.x - zombie.x,2) + Math.pow(vars.player.y - zombie.y,2)) <= this.vision && zombie.hp > 0){
-
-                zombie.velX = maint.getVelocityTo(vars.player,zombie).x * zombie.velocity;
-                zombie.velY = maint.getVelocityTo(vars.player,zombie).y * zombie.velocity;
-
-                zombie.x += zombie.velX * dt;
-                zombie.y += zombie.velY * dt;
-                vars.events.isShouldMoveEnemies = true;
-            }else{
-                zombie.velX = 0;
-                zombie.velY = 0;
-                /*if(events.isShouldMoveEnemies !== true){
-                    events.isShouldMoveEnemies = false;
-                }*/
-            }
-
-
-            //}
-        };
-
-        let knightMoving = function(dt,knight){
-            //if(events.isPlayerMoving || events.isShouldMoveEnemies || !events.isPlayerStopped){
-
-            knight.velX = 0;
-            knight.velY = 0;
-            if(vars.player.isDead === false && Math.sqrt(Math.pow(vars.player.x - knight.x,2) + Math.pow(vars.player.y - knight.y,2)) <= this.vision && knight.hp > 0){
-
-                knight.velX = maint.getVelocityTo(vars.player,knight).x * knight.velocity;
-                knight.velY = maint.getVelocityTo(vars.player,knight).y * knight.velocity;
-
-                knight.x += knight.velX * dt;
-                knight.y += knight.velY * dt;
-                //events.isShouldMoveEnemies = true;
-            }else{
-                if(knight.startX === null && knight.startY === null){
-
-                    knight.startX = this.x;
-                    knight.startY = this.y;
-                    knight.isMoving = maint.getRandomTOrF() === true ? 1 : 2;
-                }else if(knight.isMoving === 1){
-                    if(knight.x > this.startX - 100){
-                        knight.velX = -100;
-                    }else if(this.x <= this.startX - 100){
-                        knight.isMoving = 2;
-                    }
-                }else if(knight.isMoving === 2){
-                    if(knight.x < this.startX + 100){
-                        knight.velX = 100;
-                    }else if(this.x >= this.startX + 100){
-                        knight.isMoving = 1;
-                    }
-                }
-                knight.x += knight.velX * dt;
-                knight.y += knight.velY * dt;
-            }
-
-
-            //}
-        };
 
         //Creating all typed objects
 
         //Projectiles
-        vars.projectileTypes = [
-            {
-                "action":function (delp) {
-                        jQuery.each(vars.map.enemies,function (index,value) {
-                            if(maint.cirToCirCol(delp.x,delp.y,maint.getProjectile(delp.id,vars.projectileTypes).size,value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size)){
-                                value.hp -= 10;
-                                if(value.hp <= 0){value.isDead = true;}
-                                delp.living = delp.time;
-                                return false;
-                            }
-                        });
-                },
-                "type":"circle",
-                "size":10,
-                "time":5
-            },
-            {
-                "action":function (delp) {
-                    jQuery.each(vars.map.enemies,function (index,value) {
-                        if(maint.cirToCirCol(delp.x,delp.y,maint.getProjectile(delp.id,vars.projectileTypes).size,value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size)){
-                            value.hp -= 20;
-                            if(value.hp <= 0){value.isDead = true;}
-                            delp.living = delp.time;
-                            return false;
-                        }
-                    });
-                },
-                "type":"circle",
-                "size":5,
-                "time":10,
-                "color":"rgba(0,255,0,1.0)"
-            }
-        ];
+
         //Tiles
-        vars.floorTypes = {
-            solid	   : 0,
-            path	   : 1,
-            water	   : 2,
-            ground     : 3,
-            forest     : 4,
-            bricksPath : 5,
-            ice        : 6,
-            portal     : 7,
-            bushes     : 8,
-            hills      : 9
-        };
-        vars.tileTypes = [
-            {},
-            { "id":1,"colour":"#1da413", "floor":vars.floorTypes.ground,"sprite":new classes.Sprite([{"px":0,"py":0,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    maint.minusSpeed(user,0.4);
-                }},
-            { "id":2,"colour":"#d6d117", "floor":vars.floorTypes.ground,"sprite":new classes.Sprite([{"px":16,"py":0,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    maint.minusSpeed(user,0.4);
-                }},
-            { "id":3,"colour":"#d6d117", "floor":vars.floorTypes.path,"sprite":new classes.Sprite([{"px":32,"py":0,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.4;
-                }},
-            { "id":4,"colour":"#d6d117", "floor":vars.floorTypes.path,"sprite":new classes.Sprite([{"px":48,"py":0,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.4;
-                }},
-            { "id":5,"colour":"#d6d117", "floor":vars.floorTypes.path,"sprite":new classes.Sprite([{"px":0,"py":16,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.4;
-                }},
-            { "id":6,"colour":"#d6d117", "floor":vars.floorTypes.path,"sprite":new classes.Sprite([{"px":16,"py":16,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.4;
-                }},
-            { "id":7,"colour":"#d6d117", "floor":vars.floorTypes.path,"sprite":new classes.Sprite([{"px":32,"py":16,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.4;
-                }},
-            { "id":8,"colour":"#d6d117", "floor":vars.floorTypes.path,"sprite":new classes.Sprite([{"px":48,"py":16,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.4;
-                }},
-            { "id":9,"colour":"#d6d117", "floor":vars.floorTypes.bricksPath,"sprite":new classes.Sprite([{"px":0,"py":32,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.8;
-                }},
-            { "id":10,"colour":"#d6d117", "floor":vars.floorTypes.ice,"sprite":new classes.Sprite([{"px":16,"py":32,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.1;
-                    /*if(user.x + user.size > x * vars.map.tileW  || user.x - user.size < x * vars.map.tileW + vars.map.tileW) {
-                        user.x += -(user.velX * ((vars.now - vars.lastTime) / 1000)) * maint.getSpeed(user);
-                    }if(user.y + user.size > y * vars.map.tileH || user.y - user.size < y * vars.map.tileH + vars.map.tileH) {
-                        user.y += -(user.velY * ((vars.now - vars.lastTime) / 1000)) * maint.getSpeed(user);
-                    }*/
-                }},
-            { "id":11,"colour":"#d6d117", "floor":vars.floorTypes.ground,"sprite":new classes.Sprite([{"px":32,"py":32,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.7;
-                }},
-            { "id":12,"colour":"#d6d117", "floor":vars.floorTypes.portal,"sprite":new classes.Sprite([{"px":48,"py":32,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
 
-                }},
-            { "id":13,"colour":"#d6d117", "floor":vars.floorTypes.bushes,"sprite":new classes.Sprite([{"px":0,"py":48,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    maint.minusSpeed(user,0.2);
-                }},
-            { "id":14,"colour":"#d6d117", "floor":vars.floorTypes.solid,"sprite":new classes.Sprite([{"px":16,"py":48,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    if(user.x + user.size > x * vars.map.tileW  || user.x - user.size < x * vars.map.tileW + vars.map.tileW) {
-                        user.x += -(user.velX * ((vars.now - vars.lastTime) / 1000)) * maint.getSpeed(user);
-                    }if(user.y + user.size > y * vars.map.tileH || user.y - user.size < y * vars.map.tileH + vars.map.tileH) {
-                        user.y += -(user.velY * ((vars.now - vars.lastTime) / 1000)) * maint.getSpeed(user);
-                    }
-                }},
-            { "id":15,"colour":"#d6d117", "floor":vars.floorTypes.forest,"sprite":new classes.Sprite([{"px":32,"py":48,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    if(maint.isReachable(user.mount) && user.mount.type === "fly"){
-                        user.speed += 0;
-                    }else{
-                        if(user.x + user.size > x * vars.map.tileW || user.x - user.size < x * vars.map.tileW - vars.map.tileW) {
-                            user.x += -(user.velX * ((vars.now - vars.lastTime) / 1000) * maint.getSpeed(user));
-                        }if(user.y + user.size > y * vars.map.tileH || user.y - user.size < y * vars.map.tileH - vars.map.tileH) {
-                            user.y += -(user.velY * ((vars.now - vars.lastTime) / 1000) * maint.getSpeed(user));
-                        }
-                    }
-                }},
-            { "id":16,"colour":"#d6d117", "floor":vars.floorTypes.ground,"sprite":new classes.Sprite([{"px":48,"py":48,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    user.speed += 0.7;
-                }},
-            { "id":17,"colour":"#d6d117", "floor":vars.floorTypes.hills,"sprite":new classes.Sprite([{"px":0,"py":64,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    if(maint.isReachable(user.mount) && user.mount.type === "fly"){
-                        user.speed += 0;
-                    }else{
-                        maint.minusSpeed(user,0.3);
-                    }
-                }},
-            { "id":18,"colour":"#d6d117", "floor":vars.floorTypes.water,"sprite":new classes.Sprite([{"px":16,"py":64,"pw":16,"ph":16,"w":32,"h":32}],vars.tilesSprite),"action":function (user,x,y) {
-                    if(maint.isReachable(user.mount) && user.mount.type === "fly"){
-                    }else if(maint.isReachable(user.mount) && user.mount.type === "swim"){
-                        user.speed -= 0.8;
-                    }else{
-                        user.speed -= 0.2;
-                    }
-                }},
-        ];
+
         //Skills
-        vars.skillTypes = [
-            new classes.Skill("Firebolt","Fires a firebolt in your mouse pos.Cost 5 mana",0.5,function (user) {
-                if(vars.events.isLeftMouseReleased === true){
-                    if(this.lastUsed + this.cooldown * 1000 < vars.lastTime && user.mana - 5 >= 0){
-                        /*var v = {"x":vars.mouseX + vars.camera.xView,"y":vars.mouseY + vars.camera.yView};
-                        vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(user.x,user.y,maint.getVelocityTo(v,user).x * 50,maint.getVelocityTo(v,user).y * 50,null,"circle",5,10,function () {
-                            var temp = false;
-                            var delp = this;
-                            jQuery.each(vars.map.enemies,function (index,value) {
-                                if(maint.cirToCirCol(delp.x,delp.y,delp.size,value.x,value.y,value.size)){
-                                    value.hp -= 10;
-                                    if(value.hp <= 0){value.isDead = true;}
-                                    temp = true;
-                                    return false;
-                                }
-                            });
-                            if (temp){
-                                this.living = this.time;
-                            }
-                        });
-                        vars.map.delpoyables[vars.map.delpoyables.length - 1].moveTowards(vars.mouseX + vars.camera.xView,vars.mouseY + vars.camera.yView);*/
-                        classes.genProjectile(vars,0,user.x,user.y,50,50,true,vars.mouseX + vars.camera.xView,vars.mouseY + vars.camera.yView);
-                        user.mana -= 5;
-                    }else{
-                        if(this.lastUsed + this.cooldown * 1000 < vars.lastTime){
-                            maint.genTextAlert("Wait some time to use this ability again","rgba(200,0,0,1.0)",vars);
-                        }if(user.mana - 5 >= 0){
-                            maint.genTextAlert("You don't have enough mana","rgba(200,0,0,1.0)",vars);
-                        }
-                    }
-                    this.lastUsed = vars.lastTime;
-                }
-
-            },new classes.Sprite([{"px":46,"py":0,"pw":46,"ph":46,"w":67,"h":67}],vars.skillsSprite))
-        ];
-        vars.staffSkills = [
-            new classes.Skill("Firebolt","Fires a firebolt in your mouse pos.Cost 5 mana",0.5,function (user) {
-                if(vars.events.isLeftMouseReleased === true){
-                        classes.genProjectile(vars,0,user.x,user.y,100,100,true,vars.mouseX + vars.camera.xView,vars.mouseY + vars.camera.yView,true,vars.mouseX,vars.mouseY);
-                        return true;
-                }
-
-            },new classes.Sprite([{"px":46,"py":0,"pw":46,"ph":46,"w":67,"h":67}],vars.skillsSprite))
-        ];
-        //Items
-        vars.itemTypes = [
-            /*0*/{
-                "name": "Leather armor",
-                "sprite":new classes.Sprite([{"px":vars.chestPlates[0].px,"py":vars.chestPlates[0].py,"pw":vars.chestPlates[0].pw,"ph":vars.chestPlates[0].ph,"w":vars.chestPlates[0].pw,"h":vars.chestPlates[0].ph}],vars.chestPlates[0].img),
-                "x":0,
-                "y":0,
-                "type":"armor",
-                "def":1,
-                "cost":3,
-                "description":"A simple leather armor, it has 1 defence and cost 3 coins.",
-                "id":0
-            },
-            /*1*/{
-                "name": "Leather armor+",
-                "sprite":new classes.Sprite([{"px":vars.chestPlates[0].px,"py":vars.chestPlates[0].py,"pw":vars.chestPlates[0].pw,"ph":vars.chestPlates[0].ph,"w":vars.chestPlates[0].pw,"h":vars.chestPlates[0].ph}],vars.chestPlates[0].img),
-                "x":0,
-                "y":0,
-                "def":2,
-                "type":"armor",
-                "cost":4,
-                "description":"A simple leather armor, it has 2 defence and cost 4 coins.",
-                "id":1
-            },
-            /*2*/{
-                "name": "Leather armor++",
-                "sprite":new classes.Sprite([{"px":vars.chestPlates[0].px,"py":vars.chestPlates[0].py,"pw":vars.chestPlates[0].pw,"ph":vars.chestPlates[0].ph,"w":vars.chestPlates[0].pw, "h":vars.chestPlates[0].ph}],vars.chestPlates[0].img),
-                "x":0,
-                "y":0,
-                "def":3,
-                "type":"armor",
-                "cost":8,
-                "description":"A simple leather armor, it has 3 defence and cost 8 coins.",
-                "id":2
-            },
-            /*3*/{
-                "name": "Simple Heal potion",
-                "sprite":new classes.Sprite([{"px":vars.consumables[0].px,"py":vars.consumables[0].py,"pw":vars.consumables[0].pw,"ph":vars.consumables[0].ph,"w":vars.consumables[0].pw, "h":vars.consumables[0].ph,}],vars.consumables[0].img),
-                "x":0,
-                "y":0,
-                "type":"consumable",
-                "action":function (user) {
-                    maint.restoreHealth(user,20)
-                },
-                "actions":"Restores health by 20 points",
-                "cost":5,
-                "description":"Simple heal potion, it heals for 20 point and cost 5 coins.",
-                "id":3
-            },
-            /*4*/{
-                "name": "Simple Health regen potion",
-                "sprite":new classes.Sprite([{"px":vars.consumables[8].px,"py":vars.consumables[8].py,"pw":vars.consumables[8].pw,"ph":vars.consumables[8].ph,"w":vars.consumables[8].pw,"h":vars.consumables[8].ph}],vars.consumables[8].img),
-                "x":0,
-                "y":0,
-                "type":"consumable",
-                "action":function (user) {
-                    maint.restoreHealth(user,0.4)
-                },
-                "actions":"Regen health for 5 sec",
-                "cost":10,
-                "time":5000,
-                "isTemp":true,
-                "description":"Simple regen potion, it heals for 40 point for 10 sec and cost 10 coins.",
-                "id":4
-            },
-            /*5*/{
-                "name": "Wrath bringer",
-                "sprite":new classes.Sprite([{"px":vars.swords[5].px,"py":vars.swords[5].py,"pw":vars.swords[5].pw, "ph":vars.swords[5].ph,"w":vars.swords[5].pw / 2, "h":vars.swords[5].ph / 2,}],vars.swords[5].img),
-                "x":0,
-                "y":0,
-                "type":"weapon",
-                "weaponType":"melee",
-                "cooldown":0.4,
-                "dmg":4,
-                "dmgType":"area",
-                "isMelee":true,
-                "cost":10,
-                "description":"Thats wrath bringer, it has 4 area damage and cost 10 coins.",
-
-            },
-            /*6*/{
-                "name": "Wrath bringer",
-                "sprite":new classes.Sprite([{"px":vars.swords[5].px,"py":vars.swords[5].py,"pw":vars.swords[5].pw,"ph":vars.swords[5].ph,"w":vars.swords[5].pw / 2,"h":vars.swords[5].ph / 2,}],vars.swords[5].img),
-                "x":20,
-                "y":100,
-                "type":"weapon",
-                "weaponType":"melee",
-                "cooldown":0.01,
-                "dmg":9999,
-                "dmgType":"area",
-                "isMelee":true,
-                "cost":10,
-                "description":"Where did you find it?",
-                "id":6
-            },
-            /*7*/{
-                "name":"Book of firebolt",
-                "type":"skillBook",
-                "train":function (user) {
-                    if(maint.isReachable(user.magicSkill) && user.magicSkill >= 1){
-                        if(this.skill.learn(user)){
-                            user.skills[user.skills.length] = this.skill;
-                            maint.genTextAlert("Learned firebolt","rgba(255,200,200,1.0)",vars);
-                        }
-                    }else{
-                        maint.genTextAlert("Your magic skill is too low","rgba(255,200,200,1.0)",vars);
-                    }
-                },
-                "skill":vars.skillTypes[0],
-                "sprite":new classes.Sprite([{"px":36,"py":64,"pw":24,"ph":32,"w":24,"h":32}],vars.bookSprites),
-                "x":0,
-                "y":0,
-                "cost":100,
-                "description":"Its book of fire.Its cost 100 coins."
-            },
-            /*8*/{
-                "name": "Chainmall armor",
-                "sprite":new classes.Sprite([{"px":vars.chestPlates[1].px,"py":vars.chestPlates[1].py,"pw":vars.chestPlates[1].pw,"ph":vars.chestPlates[1].ph,"w":vars.chestPlates[1].pw, "h":vars.chestPlates[1].ph}],vars.chestPlates[1].img),
-                "x":0,
-                "y":0,
-                "def":5,
-                "type":"armor",
-                "cost":25,
-                "description":'Its chainmall armor,it has 5 defence and cost 5 coins.'
-            },
-            /*9*/{"sprite":new classes.Sprite([
-                {
-                    "w":32,
-                    "h":32,
-                    "pw":32,
-                    "ph":32,
-                    "px":0,
-                    "py":0
-                }],vars.expSprite),
-                "x":0,
-                "y":0,
-                "name":"exp",
-                "type":"exp",
-                "count":0
-            },
-            /*10*/{
-                "sprite":new classes.Sprite([
-                    {
-                        "w":32,
-                        "h":32,
-                        "pw":32,
-                        "ph":32,
-                        "px":0,
-                        "py":0
-                    }],vars.money[2].img),
-                "x":0,
-                "y":0,
-                "name":"money",
-                "type":"money",
-                "count":0,
-            },
-            /*11*/{
-                "dmg": 4,
-                "cooldown": 0.5,
-                "dmgType":"point",
-                "name":"hands",
-                "type":"weapon",
-                "weaponType":"melee"
-            },
-            /*12*/{
-                "sprite":new classes.Sprite([
-                    {
-                        "px":vars.bows[0].px,
-                        "py":vars.bows[0].py,
-                        "pw":vars.bows[0].pw,
-                        "ph":vars.bows[0].ph,
-                        "w":vars.bows[0].pw,
-                        "h":vars.bows[0].ph
-                    }],vars.bowsSprites),
-                "x":0,
-                "y":0,
-                "dmg": 20,
-                "cooldown": 1.4,
-                "dmgType":"point",
-                "name":"Elven bow",
-                "type":"weapon",
-                "weaponType":"ranged",
-                "cost":20,
-                "description":"It's elven bow it use elven arrows it cost 20 coins and deals 20 damage.It has 1.4 seconds for cooldown."
-            },
-            /*13*/{
-                "sprite":new classes.Sprite([
-                    {
-                        "px":vars.arrows[0].px,
-                        "py":vars.arrows[0].py,
-                        "pw":vars.arrows[0].pw,
-                        "ph":vars.arrows[0].ph,
-                        "w":vars.arrows[0].pw,
-                        "h":vars.arrows[0].ph
-                    }],vars.arrowsSprite),
-                "x":0,
-                "y":0,
-                "dmg": 20,
-                "name":"Elven arrow",
-                "type":"ammo",
-                "ammoFor":12,
-                "meta":{"amount":5},
-                "cost":15,
-                "description":"It's elven arrow for elven bow it cost 15 coins per 5 arrows and deals 20 damage."
-            },
-            /*14*/{
-                "sprite":new classes.Sprite([
-                    {
-                        "px":vars.shields[0].px,
-                        "py":vars.shields[0].py,
-                        "pw":vars.shields[0].pw,
-                        "ph":vars.shields[0].ph,
-                        "w":vars.shields[0].pw,
-                        "h":vars.shields[0].ph
-                    }],vars.shieldsSprite),
-                "x":0,
-                "y":0,
-                "def": 10,
-                "name":"Righteous shield",
-                "type":"shield",
-                "cost":50,
-                "spd":-0.3,
-                "description":"It's righteous shield it decreases your speed by 0.3 cost 50 and has 10 shield damage."
-            },
-            /*15*/{
-                "sprite":new classes.Sprite([
-                    {
-                        "px":vars.staffs[0].px,
-                        "py":vars.staffs[0].py,
-                        "pw":vars.staffs[0].pw,
-                        "ph":vars.staffs[0].ph,
-                        "w":vars.staffs[0].pw,
-                        "h":vars.staffs[0].ph
-                    }],vars.staffsSprite),
-                "x":0,
-                "y":0,
-                "name":"Staff of fire",
-                "weaponType":"staff",
-                "type":"weapon",
-                "cost":100,
-                "spd":0.2,
-                "action":vars.staffSkills[0].action,
-                "cooldown":2,
-                "description":"Staff of fire cost 100 coins it's add 0.2 points to your speed and has 2s for cooldown, it deals 10 damage."
 
 
-
-            }
-        ];
         //Enemies
-        vars.enemyTypes = [
-            /*0*/{
-                "name":"knight",
-                "id":0,
-                "hp":100,
-                "maxHp":100,
-                "dmg":30,
-                "def":10,
-                "cooldown":2,
-                "timeFromLastAttack":0,
-                "vision":100,
-                "range":30,
-                "size":13,
-                "x":0,
-                "y":0,
-                "startX":null,
-                "startY":null,
-                "velX":0,
-                "velY":0,
-                "velocity": 150,
-                "isDead":false,
-                "move":knightMoving,
-                "money":1,
-                "commonDrops":[
-                    vars.itemTypes[14]
-                ],
-                "rareDrops":[
-                    vars.itemTypes[14]
-                ],
-                "epicDrops":[
-                    vars.itemTypes[14]
-                ],
-                "legendaryDrops":[
-                    vars.itemTypes[14]
-                ],
-                "color":"rgba(30,30,30,1.0)",
-                "exp":100,
-                "randomSpeed":true,
-                "rndSpdStart":10,
-                "rndSpdFinish":200,
-                "equipment":[]
-            },
-            /*1*/{
-                "name":"zombie",
-                "id":1,
-                "hp":5,
-                "maxHp":5,
-                "dmg":1,
-                "def":3,
-                "cooldown":1.2,
-                "timeFromLastAttack":0,
-                "vision":100,
-                "range":45,
-                "size":13,
-                "x":0,
-                "y":0,
-                "velX":0,
-                "velY":0,
-                "velocity": 50,
-                "isDead":false,
-                "move":zombieMoving,
-                "money":1,
-                "commonDrops":[
-                    vars.itemTypes[0],
-                    vars.itemTypes[12]
-
-                ],
-                "rareDrops":[
-                    vars.itemTypes[1],
-                    vars.itemTypes[3],
-                    vars.itemTypes[12],
-                    vars.itemTypes[13]
-                ],
-                "epicDrops":[
-                    vars.itemTypes[2],
-                    vars.itemTypes[4],
-                    vars.itemTypes[12],
-                    vars.itemTypes[13]
-                ],
-                "legendaryDrops":[
-                    vars.itemTypes[5],
-                    vars.itemTypes[13]
-                ],
-                "color":"rgba(0,255,0,1.0)",
-                "exp":15,
-                "randomSpeed":true,
-                "rndSpdStart":10,
-                "rndSpdFinish":100,
-                "equipment":[]
-            }
-        ];
-        //Quest
-        vars.questTypes = [
-            new classes.Quest("Killing zombies","Kill 10 zombies and you will earn 50 coins",[{"id":10,"meta":{"count":50}}],function (user) {
-                if(!this.isFinished){
-                    if(!maint.isReachable(user.zombieCounter)){
-                        user.zombieCounter = 0;
-                    }
-                    if(user.zombieCounter >= 10){
-                        user.money += 50;
-                        user.zombieCounter = 0;
-                        user.zombieCounter = undefined;
-                        return true;
-                    }
-                }
-            })
-        ];
 
         //Setting ids:
 
@@ -998,20 +234,20 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
             vars.itemTypes[i].id = i;
         }
         //Tiles
-        for(let i = 0; i < vars.tileTypes.length;i++){
-            vars.tileTypes[i].id = i;
+        for(let i = 0; i < itemsList.tileTypes.length;i++){
+            itemsList.tileTypes[i].id = i;
         }
         //Enemies
-        for(let i = 0; i < vars.enemyTypes.length;i++){
-            vars.enemyTypes[i].id = i;
+        for(let i = 0; i < itemsList.enemyTypes.length;i++){
+            itemsList.enemyTypes[i].id = i;
         }
         //Projectiles
         for(let i = 0; i < vars.projectileTypes.length;i++){
             vars.projectileTypes[i].id = i;
         }
         //Skills
-        for(let i = 0; i < vars.skillTypes.length;i++){
-            vars.skillTypes[i].id = i;
+        for(let i = 0; i < itemsList.skillTypes.length;i++){
+            itemsList.skillTypes[i].id = i;
         }
         //Staff skills
         for(let i = 0; i < vars.staffSkills.length;i++){
@@ -1143,15 +379,15 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
             },
             "armor":{
                 "name": "Knight's Armor",
-                "img":vars.chestPlates[3].img,
-                "px":vars.chestPlates[3].px,
-                "py":vars.chestPlates[3].py,
-                "pw":vars.chestPlates[3].pw,
-                "ph":vars.chestPlates[3].ph,
+                "img":vars.chestplates[3].img,
+                "px":vars.chestplates[3].px,
+                "py":vars.chestplates[3].py,
+                "pw":vars.chestplates[3].pw,
+                "ph":vars.chestplates[3].ph,
                 "x":0,
                 "y":0,
-                "w":vars.chestPlates[3].pw,
-                "h":vars.chestPlates[3].ph,
+                "w":vars.chestplates[3].pw,
+                "h":vars.chestplates[3].ph,
                 "def":13,
                 "type":"armor",
                 "cost":200
@@ -1212,15 +448,15 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
             },
             "armor":{
                 "name": "Knight's Armor",
-                "img":vars.chestPlates[3].img,
-                "px":vars.chestPlates[3].px,
-                "py":vars.chestPlates[3].py,
-                "pw":vars.chestPlates[3].pw,
-                "ph":vars.chestPlates[3].ph,
+                "img":vars.chestplates[3].img,
+                "px":vars.chestplates[3].px,
+                "py":vars.chestplates[3].py,
+                "pw":vars.chestplates[3].pw,
+                "ph":vars.chestplates[3].ph,
                 "x":0,
                 "y":0,
-                "w":vars.chestPlates[3].pw,
-                "h":vars.chestPlates[3].ph,
+                "w":vars.chestplates[3].pw,
+                "h":vars.chestplates[3].ph,
                 "def":13,
                 "type":"armor",
                 "cost":200
@@ -1263,12 +499,12 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         //Spawners
         if(!vars.isLoadedFromSaveGame) {
             vars.map.spawners[0] = jQuery.extend(true, {}, vars.sSpawner);
-            vars.map.spawners[0].enemy = jQuery.extend(true, {}, vars.enemyTypes[1]);
+            vars.map.spawners[0].enemy = jQuery.extend(true, {}, itemsList.enemyTypes[1]);
             vars.map.spawners[0].x = 1000;
             vars.map.spawners[0].y = 1000;
 
             vars.map.spawners[1] = jQuery.extend(true, {}, vars.sSpawner);
-            vars.map.spawners[1].enemy = jQuery.extend(true, {}, vars.enemyTypes[0]);
+            vars.map.spawners[1].enemy = jQuery.extend(true, {}, itemsList.enemyTypes[0]);
             vars.map.spawners[1].x = 1500;
             vars.map.spawners[1].y = 1500;
             vars.map.spawners[1].rate = 5;
@@ -1306,9 +542,9 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         //Tiles
         let count = 0;
         for(let y = 0;y < vars.map.h;y++){
-            for(var x = 0;x < vars.map.w;x++) {
+            for(let x = 0;x < vars.map.w;x++) {
                 if(maint.isTileInRange(vars.map.map[maint.toIndex(x, y, vars.map)],vars.camera,vars.map.tileW,vars.map.tileH)){
-                    vars.tileTypes[vars.map.map[maint.toIndex(x, y, vars.map)].id].sprite.draw(vars.gameTime, vars.ctx, x * vars.map.tileW - vars.camera.xView, y * vars.map.tileH - vars.camera.yView);
+                    itemsList.tileTypes[vars.map.map[maint.toIndex(x, y, vars.map)].id].sprite.draw(vars.gameTime, vars.ctx, x * vars.map.tileW - vars.camera.xView, y * vars.map.tileH - vars.camera.yView);
                     count++;
                 }
             }
@@ -1321,19 +557,19 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
 
         //Items
         for(let i = 0;i < vars.map.items.length;i++) {
-            if (maint.isReachable(vars.map.items[i]) && maint.isReachable(maint.getItem(vars.map.items[i].id,vars)) && maint.isItemInRange(vars.map.items[i],maint.getItem(vars.map.items[i].id,vars).sprite.w,maint.getItem(vars.map.items[i].id,vars).sprite.h,vars.camera)){
+            if (maint.isReachable(vars.map.items[i]) && maint.isReachable(itemsList.getItem(vars.map.items[i].id)) && itemsList.isItemInRange(vars.map.items[i],itemsList.getItem(vars.map.items[i].id).sprite.w,itemsList.getItem(vars.map.items[i].id).sprite.h,vars.camera)){
                 //console.log(map.items[i]);
-                maint.getItem(vars.map.items[i].id,vars).sprite.draw(vars.gameTime,vars.ctx, vars.map.items[i].x - vars.camera.xView, vars.map.items[i].y - vars.camera.yView/*,map.items[i].sprite.w,map.items[i].sprite.h*/);
+                itemsList.getItem(vars.map.items[i].id).sprite.draw(vars.gameTime,vars.ctx, vars.map.items[i].x - vars.camera.xView, vars.map.items[i].y - vars.camera.yView/*,map.items[i].sprite.w,map.items[i].sprite.h*/);
             }
         }
 
         //Deployables
         for(let i = 0;i < vars.map.delpoyables.length;i++){
             //map.delpoyables[i].sprite.draw(gameTime,map.delpoyables[i].x - camera.xView,map.delpoyables[i].y - camera.yView,map.delpoyables[i].sprite.w,map.delpoyables[i].sprite.h);
-            if(maint.getProjectile(vars.map.delpoyables[i].id,vars.projectileTypes).type === "circle"){
-                vars.ctx.fillStyle = maint.getProjectile(vars.map.delpoyables[i].id,vars.projectileTypes).color;
+            if(maint.getProjectile(vars.map.delpoyables[i].id,itemsList.projectileTypes).type === "circle"){
+                vars.ctx.fillStyle = maint.getProjectile(vars.map.delpoyables[i].id,itemsList.projectileTypes).color;
                 vars.ctx.beginPath();
-                vars.ctx.arc(vars.map.delpoyables[i].x - vars.camera.xView,vars.map.delpoyables[i].y - vars.camera.yView,maint.getProjectile(vars.map.delpoyables[i].id,vars.projectileTypes).size,0,360,false);
+                vars.ctx.arc(vars.map.delpoyables[i].x - vars.camera.xView,vars.map.delpoyables[i].y - vars.camera.yView,maint.getProjectile(vars.map.delpoyables[i].id,itemsList.projectileTypes).size,0,360,false);
                 vars.ctx.closePath();
                 vars.ctx.fill();
             }
@@ -1365,9 +601,9 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         jQuery.each(vars.map.enemies,function (index,value) {
             if(value.isDead === false /*&& maint.isEnemInRange(value,vars.camera)*/){
                 vars.ctx.strokeStyle = "rgba(0,0,0,1.0)";
-                vars.ctx.fillStyle = maint.getEnemy(value.id,vars.enemyTypes).color;
+                vars.ctx.fillStyle = maint.getEnemy(value.id,itemsList.enemyTypes).color;
                 vars.ctx.beginPath();
-                vars.ctx.arc(value.x - vars.camera.xView,value.y - vars.camera.yView,maint.getEnemy(value.id,vars.enemyTypes).size,0,360,false);
+                vars.ctx.arc(value.x - vars.camera.xView,value.y - vars.camera.yView,maint.getEnemy(value.id,itemsList.enemyTypes).size,0,360,false);
                 vars.ctx.stroke();
                 vars.ctx.fill();
                 vars.ctx.closePath();
@@ -1394,11 +630,11 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                 vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
                 vars.ctx.font = "10px Arial";
                 vars.ctx.beginPath();
-                vars.ctx.fillText(maint.getEnemy(value.id,vars.enemyTypes).name,value.x - maint.getEnemy(value.id,vars.enemyTypes).size - vars.camera.xView,value.y - maint.getEnemy(value.id,vars.enemyTypes).size - 20 - vars.camera.yView);
+                vars.ctx.fillText(maint.getEnemy(value.id,itemsList.enemyTypes).name,value.x - maint.getEnemy(value.id,itemsList.enemyTypes).size - vars.camera.xView,value.y - maint.getEnemy(value.id,itemsList.enemyTypes).size - 20 - vars.camera.yView);
                 vars.ctx.fillStyle = "rgba(155,10,10,1.0)";
-                vars.ctx.fillRect(value.x - maint.getEnemy(value.id,vars.enemyTypes).size - 1 - vars.camera.xView,value.y - maint.getEnemy(value.id,vars.enemyTypes).size - 15 - vars.camera.yView,maint.getEnemy(value.id,vars.enemyTypes).size * 2.2,10);
+                vars.ctx.fillRect(value.x - maint.getEnemy(value.id,itemsList.enemyTypes).size - 1 - vars.camera.xView,value.y - maint.getEnemy(value.id,itemsList.enemyTypes).size - 15 - vars.camera.yView,maint.getEnemy(value.id,itemsList.enemyTypes).size * 2.2,10);
                 vars.ctx.fillStyle = "rgba(255,10,10,1.0)";
-                vars.ctx.fillRect(value.x - maint.getEnemy(value.id,vars.enemyTypes).size - 1 - vars.camera.xView,value.y - maint.getEnemy(value.id,vars.enemyTypes).size - 15 - vars.camera.yView,maint.getEnemy(value.id,vars.enemyTypes).size * 2.2 * (value.hp / value.maxHp),10);
+                vars.ctx.fillRect(value.x - maint.getEnemy(value.id,itemsList.enemyTypes).size - 1 - vars.camera.xView,value.y - maint.getEnemy(value.id,itemsList.enemyTypes).size - 15 - vars.camera.yView,maint.getEnemy(value.id,itemsList.enemyTypes).size * 2.2 * (value.hp / value.maxHp),10);
                 vars.ctx.closePath();
             }
         });
@@ -1529,7 +765,7 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         vars.ctx.drawImage(vars.playerHotbarSprite,vars.playerHotbar.x,vars.playerHotbar.y);
         for(let i = 0;i < 6;i++){
             if(maint.isReachable(vars.player.hotbar.items[i]) && i < 6) {
-                maint.getSkill(vars.player.hotbar.items[i].id,vars.skillTypes).sprite.drawWH(vars.gameTime,vars.ctx,vars.playerHotbar.x + i * 54 + 21, vars.playerHotbar.y + 4, 41, 41);
+                maint.getSkill(vars.player.hotbar.items[i].id,itemsList.skillTypes).sprite.drawWH(vars.gameTime,vars.ctx,vars.playerHotbar.x + i * 54 + 21, vars.playerHotbar.y + 4, 41, 41);
             }
         }
 
@@ -1564,7 +800,7 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         //Event on collision with tiles
         jQuery.each(vars.map.map,function (index,value) {
             if(maint.circleToRectIntersection(vars.player.x,vars.player.y,vars.player.size,value.x * vars.map.tileW,value.y * vars.map.tileH,vars.map.tileW,vars.map.tileW )){
-                vars.tileTypes[value.id].action(vars.player,value.x,value.y);
+                itemsList.tileTypes[value.id].action(vars.player,value.x,value.y);
             }
         });
 
@@ -1590,7 +826,7 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         vars.player.mainActions(vars);
         //Collision with objects
         jQuery.each(vars.map.object,function (index,value) {
-            if(value.type.floor === vars.floorTypes.solid){
+            if(value.type.floor === itemsList.floorTypes.solid){
                 if(maint.circleToRectIntersection(vars.player.x,vars.player.y,vars.player.size - 5,value.col.x,value.col.y,value.col.w,value.col.h)){
                     if(vars.player.x + vars.player.size - 5 > value.col.x || vars.player.x - vars.player.size - 5 < value.col.x + value.col.w) {
                         vars.player.x += -(vars.player.velX * dt);
@@ -1644,12 +880,12 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                 for(let index = 0;index < vars.map.items.length;index++){
                     let value = vars.map.items[index];
 
-                    if (maint.isReachable(value) && (maint.isReachable(maint.getItem(value.id, vars).sprite)) && maint.isItemInRange(value, maint.getItem(value.id, vars).sprite.w, maint.getItem(value.id, vars).sprite.h, vars.camera) && maint.circleToRectIntersection(vars.player.x, vars.player.y, vars.player.size, value.x, value.y, maint.getItem(value.id, vars).sprite.w, maint.getItem(value.id, vars).sprite.h)) {
-                        if (maint.getItem(value.id, vars).type === "exp") {
+                    if (maint.isReachable(value) && (maint.isReachable(itemsList.getItem(value.id).sprite)) && maint.isItemInRange(value, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h, vars.camera) && maint.circleToRectIntersection(vars.player.x, vars.player.y, vars.player.size, value.x, value.y, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h)) {
+                        if (itemsList.getItem(value.id).type === "exp") {
                             vars.player.exp += value.count;
                             vars.map.items.splice(index, 1);
                             index--;
-                        } else if (maint.getItem(value.id, vars).type === "money") {
+                        } else if (itemsList.getItem(value.id).type === "money") {
                             vars.player.money += value.count;
                             vars.map.items.splice(index, 1);
                             index--;
@@ -1674,8 +910,8 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                 value.y += value.vy * dt;
             }
 
-            if(maint.isReachable(maint.getProjectile(value.id,vars.projectileTypes).action)){
-                vars.projectileTypes[value.id].action(value);
+            if(maint.isReachable(maint.getProjectile(value.id,itemsList.projectileTypes).action)){
+                itemsList.projectileTypes[value.id].action(value);
             }
             value.living += dt;
 
@@ -1766,10 +1002,10 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         //Enemy moving and collision with player
         jQuery.each(vars.map.enemies,function (index,value) {
             //value.move(dt);
-            maint.getEnemy(value.id,vars.enemyTypes).move(dt,value);
+            maint.getEnemy(value.id,itemsList.enemyTypes).move(dt,value);
 
 
-            if(maint.cirToCirCol(value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size,vars.player.x,vars.player.y,vars.player.size)){
+            if(maint.cirToCirCol(value.x,value.y,maint.getEnemy(value.id,itemsList.enemyTypes).size,vars.player.x,vars.player.y,vars.player.size)){
                 let midpoint = {"x":0,"y":0};
                 let dist;
 
@@ -1778,8 +1014,8 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                 midpoint.x = (value.x + vars.player.x) / 2;
                 midpoint.y = (value.y + vars.player.y) / 2;
 
-                value.x = midpoint.x + maint.getEnemy(value.id,vars.enemyTypes).size * (value.x - vars.player.x) / dist;
-                value.y = midpoint.y + maint.getEnemy(value.id,vars.enemyTypes).size * (value.y - vars.player.y) / dist;
+                value.x = midpoint.x + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.x - vars.player.x) / dist;
+                value.y = midpoint.y + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.y - vars.player.y) / dist;
 
 
             }
@@ -1794,11 +1030,11 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                     midpoint.x = (value.x + value2.x) / 2;
                     midpoint.y = (value.y + value2.y) / 2;
 
-                    value.x = midpoint.x + maint.getEnemy(value.id,vars.enemyTypes).size * (value.x - value2.x) / dist;
-                    value.y = midpoint.y + maint.getEnemy(value.id,vars.enemyTypes).size * (value.y - value2.y) / dist;
+                    value.x = midpoint.x + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.x - value2.x) / dist;
+                    value.y = midpoint.y + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.y - value2.y) / dist;
 
-                    value2.x = midpoint.x + maint.getEnemy(value2.id,vars.enemyTypes).size * (value2.x - value.x) / dist;
-                    value2.y = midpoint.y + maint.getEnemy(value2.id,vars.enemyTypes).size * (value2.y - value.y) / dist;
+                    value2.x = midpoint.x + maint.getEnemy(value2.id,itemsList.enemyTypes).size * (value2.x - value.x) / dist;
+                    value2.y = midpoint.y + maint.getEnemy(value2.id,itemsList.enemyTypes).size * (value2.y - value.y) / dist;
                 }
             }
 
@@ -1808,7 +1044,7 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
         if(vars.player.isDead === false) {
             jQuery.each(vars.map.enemies, function (index, value) {
                 value.timeFromLastAttack += dt;
-                let enemyT = maint.getEnemy(value.id,vars.enemyTypes);
+                let enemyT = maint.getEnemy(value.id,itemsList.enemyTypes);
                 if(value.timeFromLastAttack >= enemyT.cooldown && (Math.sqrt(Math.pow(vars.player.x - value.x, 2) + Math.pow(vars.player.y - value.y, 2)) <= enemyT.range)){
                 if (maint.circleToRectIntersection(value.x, value.y, enemyT.size, vars.playerAttackBox.x, vars.playerAttackBox.y, vars.playerAttackBox.w, vars.playerAttackBox.h)) {
                         if (enemyT.dmg * 10 < maint.getFullDef(vars.player,vars)) {
@@ -1876,7 +1112,7 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                     (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w &&
                     (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.h))
                 ){
-                    let originalItem = maint.getItem(value.object,vars);
+                    let originalItem = itemsList.getItem(value.object);
                     if(vars.events.isLeftMousePressed && !vars.events.isMouseWithInv){
                         vars.player.inventory.chosen = value;
                         vars.events.isMouseWithInv = true;
@@ -1889,7 +1125,7 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                     ){
                         //Checking if trader can afford this
                         if(classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs).money - originalItem.cost >= 0) {
-                            vars.player.money += maint.getItem(value.object.id,vars).cost;
+                            vars.player.money += itemsList.getItem(value.object.id).cost;
                             classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs).money -= originalItem.cost;
                             value.object = null;
                             return true;
@@ -1906,9 +1142,9 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                 for(let index in vars.player.inventory.equipment){
                     let value = vars.player.inventory.equipment[index];
                     if(maint.isReachable(value.object) &&
-                        (vars.mouseX > value.object.x && vars.mouseX < value.object.x + maint.getItem(value.object.id,vars).sprite.w) &&
+                        (vars.mouseX > value.object.x && vars.mouseX < value.object.x + itemsList.getItem(value.object.id).sprite.w) &&
                         (vars.mouseY > value.object.y &&
-                            vars.mouseY < value.object.y + maint.getItem(value.object.id,vars).sprite.h)
+                            vars.mouseY < value.object.y + itemsList.getItem(value.object.id).sprite.h)
                         && vars.events.isMouseWithInv === false && vars.events.isLeftMousePressed === true
                     ){
                         vars.player.inventory.chosen = value.object;
@@ -1982,8 +1218,8 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                         let x2 = vars.player.x + Math.cos((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
                         let y2 = vars.player.y - Math.sin((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
                         let item = {
-                            "w": maint.getItem(vars.player.inventory.chosen.object.id, vars).sprite.w,
-                            "h": maint.getItem(vars.player.inventory.chosen.object.id, vars).sprite.h
+                            "w": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.w,
+                            "h": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.h
                         };
                         //Creating("dropping item")
                         maint.createInTheWorld(x2 - item.w / 1.8, y2 - item.h / 1.8, vars.player.inventory.chosen.object.id, vars, {"amount": vars.player.inventory.chosen.object.amount});
@@ -2001,10 +1237,10 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                 ) {
                     //Checking if item is consumable and if it have one time actions or duration effect
                     if (maint.isReachable(vars.player.inventory.chosen) &&
-                        maint.getItem(vars.player.inventory.chosen.object.id, vars).type === "consumable" &&
-                        maint.isReachable(maint.getItem(vars.player.inventory.chosen.object.id, vars).action)
+                        itemsList.getItem(vars.player.inventory.chosen.object.id).type === "consumable" &&
+                        maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).action)
                     ) {
-                        let originalItem = maint.getItem(vars.player.chosen.object.id,vars);
+                        let originalItem = itemsList.getItem(vars.player.chosen.object.id);
                         if (
                             originalItem.isTemp === true) {
                             vars.player.actions[vars.player.actions.length] = {
@@ -2019,10 +1255,10 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
                         vars.player.inventory.removeItem(vars.player,inventory.chosen.inventoryID);
                     } /*Checking if item is book for learning skills and applying learn function*/else if (
                         maint.isReachable(vars.player.inventory.chosen) &&
-                        maint.getItem(vars.player.inventory.chosen.object.id, vars).type === "skillBook" &&
-                        maint.isReachable(maint.getItem(vars.player.inventory.chosen.object.id, vars).train(vars.player))
+                        itemsList.getItem(vars.player.inventory.chosen.object.id).type === "skillBook" &&
+                        maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).train(vars.player))
                     ){
-                        maint.getItem(vars.player.inventory.chosen.object.id, vars).train(player);
+                        itemsList.getItem(vars.player.inventory.chosen.object.id).train(player);
                     }
                 }
 
@@ -2064,8 +1300,8 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
 
         //Checking for using active item in hotbar
         if(maint.isReachable(vars.player.hotbar.activeId) && maint.isReachable(vars.player.hotbar.items[vars.player.hotbar.activeId])){
-            if(vars.player.hotbar.items[vars.player.hotbar.activeId].type === "skill" && maint.isReachable(maint.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id,vars.skillTypes).use)){
-                maint.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id,vars.skillTypes).use(vars.player);
+            if(vars.player.hotbar.items[vars.player.hotbar.activeId].type === "skill" && maint.isReachable(maint.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id,itemsList.skillTypes).use)){
+                maint.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id,itemsList.skillTypes).use(vars.player);
             }
         }
 
@@ -2088,21 +1324,5 @@ define(["classes","jquery","map"],function (classes,jQuery,map) {
 
     };
 
-
-    function loadImages(names,callback,vars) {
-
-        let name,
-            result = {},
-            count  = names.length,
-            onload = function() { if(--count === 0) {callback()} };
-
-        for(let n = 0;n < names.length;n++) {
-            name = names[n];
-            vars[name] = new Image();
-            vars[name].addEventListener('load', onload);
-            vars[name].src = "assets/" + name + ".png";
-        }
-
-    }
     return func;
 });

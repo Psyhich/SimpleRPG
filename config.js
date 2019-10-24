@@ -6,7 +6,8 @@ requirejs.config({
         maintenance:"scripts/maintenance",
         main:"scripts/main",
         jquery:"libs/jquery",
-        map:"scripts/map"
+        map:"scripts/map",
+        itemList:"scripts/allList"
     }
 });
 

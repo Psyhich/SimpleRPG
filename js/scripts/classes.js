@@ -1,114 +1,214 @@
-define(["maintenance","vars"],function (maint,vars) {
+define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
     let classes = {};
+
     //Sprite
-    classes.Sprite = function(data,img) {
-        if(img === null || img === undefined){
-            return false;
-        }
-        this.animated = data.length > 1;
-        this.frameCount = data.length;
-        this.duration = 0;
-        this.loop = true;
-        this.img = img;
-        if(data.length > 1){
-            for(let i in data){
-                if(typeof data[i].d === undefined){
-                    data[i].d = 100;
-                }
-                this.duration += data[i].d;
-                if(typeof data[i].loop !== undefined){
-                    this.loop = data[i].loop ? true : false;
+    classes.Sprite = class{
+        constructor(data,img) {
+            if(img === null || img === undefined){
+                return false;
+            }
+            this.animated = data.length > 1;
+            this.frameCount = data.length;
+            this.duration = 0;
+            this.loop = true;
+            this.img = img;
+            if(data.length > 1){
+                for(let i in data){
+                    if(typeof data[i].d === undefined){
+                        data[i].d = 100;
+                    }
+                    this.duration += data[i].d;
+                    if(typeof data[i].loop !== undefined){
+                        this.loop = data[i].loop ? true : false;
+                    }
                 }
             }
-        }
-        this.frames = data;
-        this.w = 0;
-        this.h = 0;
+            this.frames = data;
+            this.w = 0;
+            this.h = 0;
+        };
+
+        drawWH = function (t,ctx,x,y,w,h) {
+            var frameId = 0;
+            if(!this.loop && this.animated && t >= this.duration){
+                frameId = (this.frames.length - 1);
+            }else if(this.animated){
+                t = t % this.duration;
+                var totalD = 0;
+
+                for(var i in this.frames){
+                    totalD += this.frames[i].d;
+                    frameId = i;
+                    this.frameId = totalD;
+                    if(t <= totalD){
+                        break;
+                    }
+                }
+            }
+
+            ctx.drawImage(
+                this.img,
+                this.frames[frameId].px,this.frames[frameId].py,
+                this.frames[frameId].pw,this.frames[frameId].ph,
+                x,y,
+                w,h);
+            this.w = this.frames[frameId].w;
+            this.h = this.frames[frameId].h;
+        };
+
+        draw = function (t,ctx,x,y){
+            var frameId = 0;
+            if(!this.loop && this.animated && t >= this.duration){
+                frameId = (this.frames.length - 1);
+            }else if(this.animated){
+                t = t % this.duration;
+                var totalD = 0;
+
+                for(var i in this.frames){
+                    totalD += this.frames[i].d;
+                    frameId = i;
+                    this.frameId = totalD;
+                    if(t <= totalD){
+                        break;
+                    }
+                }
+            }
+
+            ctx.drawImage(
+                this.img,
+                this.frames[frameId].px,this.frames[frameId].py,
+                this.frames[frameId].pw,this.frames[frameId].ph,
+                x,y,
+                this.frames[frameId].w,this.frames[frameId].h);
+            this.w = this.frames[frameId].w;
+            this.h = this.frames[frameId].h;
+        };
     };
-    classes.Sprite.prototype.drawWH = function (t,ctx,x,y,w,h) {
-        var frameId = 0;
-        if(!this.loop && this.animated && t >= this.duration){
-            frameId = (this.frames.length - 1);
-        }else if(this.animated){
-            t = t % this.duration;
-            var totalD = 0;
 
-            for(var i in this.frames){
-                totalD += this.frames[i].d;
-                frameId = i;
-                this.frameId = totalD;
-                if(t <= totalD){
-                    break;
-                }
+    //Items classes
+    classes.Item = class{
+        constructor(name, sprite, description, cost, meta, action, type){
+            this.name = name;
+            this.sprite = sprite;
+            this.description = description;
+            this.cost = cost;
+            this.meta = maint.isReachable(meta) ? meta : null;
+            this.action = maint.isReachable(action) ? action : null;
+            this.type = maint.isReachable(type) ? type :"item";
+        };
+
+        //Use item if possible function
+        use = function (user) {
+            if(this.action !== null){
+                this.action.call(user);
             }
-        }
+        };
 
-        ctx.drawImage(
-            this.img,
-            this.frames[frameId].px,this.frames[frameId].py,
-            this.frames[frameId].pw,this.frames[frameId].ph,
-            x,y,
-            w,h);
-        this.w = this.frames[frameId].w;
-        this.h = this.frames[frameId].h;
     };
-    classes.Sprite.prototype.draw = function (t,ctx,x,y){
-        var frameId = 0;
-        if(!this.loop && this.animated && t >= this.duration){
-            frameId = (this.frames.length - 1);
-        }else if(this.animated){
-            t = t % this.duration;
-            var totalD = 0;
 
-            for(var i in this.frames){
-                totalD += this.frames[i].d;
-                frameId = i;
-                this.frameId = totalD;
-                if(t <= totalD){
-                    break;
-                }
-            }
-        }
+    /**
+     * @inherits Item
+     * @param effects is an object that contains all effects such as dmg buffs debuffs and etc.
+     * */
+    classes.Weapon = class extends classes.Item{
+        constructor(name,sprite,description,cost,meta,action,effects){
+            super(name,sprite,description,cost,meta,action,"weapon");
+            this.type = ;
+            this.effects = effects;
+        };
 
-        ctx.drawImage(
-            this.img,
-            this.frames[frameId].px,this.frames[frameId].py,
-            this.frames[frameId].pw,this.frames[frameId].ph,
-            x,y,
-            this.frames[frameId].w,this.frames[frameId].h);
-        this.w = this.frames[frameId].w;
-        this.h = this.frames[frameId].h;
+
+    };
+
+    /**
+    * @inherits Item
+    */
+    classes.Armor = class extends classes.Item{
+        constructor(name,sprite,description,cost,meta,action,effects){
+            super(name,name,sprite,description,cost,meta,action);
+            this.type = "armor";
+            this.effects = effects;
+        };
+    };
+
+    /**
+     * @inherits Item
+     */
+    classes.Helmet = class extends classes.Item{
+        constructor(name,sprite,description,cost,meta,action,effects){
+            super(name,name,sprite,description,cost,meta,action);
+            this.type = "helmet";
+            this.effects = effects;
+        };
+    };
+
+    /**
+     * @inherits Item
+     */
+    classes.Ring = class extends classes.Item{
+        constructor(name,sprite,description,cost,meta,action,effects){
+            super(name,name,sprite,description,cost,meta,action);
+            this.type = "ring";
+            this.effects = effects;
+        };
+    };
+
+    /**
+     * @inherits Item
+     */
+    classes.Shield = class extends classes.Item{
+        constructor(name,sprite,description,cost,meta,action,effects){
+            super(name,name,sprite,description,cost,meta,action);
+            this.type = "shield";
+            this.effects = effects;
+        };
+    };
+
+    /**
+     * @inherits Item
+     */
+    classes.Ammo = class extends classes.Item{
+        constructor(name,sprite,description,cost,meta,action,effects){
+            super(name,name,sprite,description,cost,meta,action);
+            this.type = "ammo";
+            this.meta = maint.isReachable(meta) ? this.meta : {"isStackable": true, "amount": 1}
+            this.effects = effects;
+        };
     };
 
     //Skill
-    classes.Skill = function(name,description,cooldown,func,sprite) {
-        this.name = name;
-        this.description = description;
-        this.action = func;
-        this.sprite = sprite;
-        this.cooldown = cooldown;
-        this.lastUsed = 0;
-        this.type = "skill";
-    };
-    classes.Skill.prototype.use = function (user) {
-        this.action(user);
-    };
-    classes.Skill.prototype.learn = function(user) {
-        var a = false;
-        if(user.skills.length > 0){
-            jQuery.each(user.skills,function (index,value) {
-                if(value === this){
-                    maint.genTextAlert("You already learned that skill.","rgba(255,100,100,1.0)",vars);
-                    a = false;
-                    return false;
-                }else if(value !== this){
-                    a = true;
-                }
-            });
-        }else{
-            a = true;
-        }
-        return a;
+    classes.Skill = class{
+        constructor(name,description,cooldown,func,sprite) {
+            this.name = name;
+            this.description = description;
+            this.action = func;
+            this.sprite = sprite;
+            this.cooldown = cooldown;
+            this.lastUsed = 0;
+            this.type = "skill";
+        };
+
+        use = function (user) {
+            this.action(user);
+        };
+
+        learn = function(user) {
+            var a = false;
+            if(user.skills.length > 0){
+                jQuery.each(user.skills,function (index,value) {
+                    if(value === this){
+                        maint.genTextAlert("You already learned that skill.","rgba(255,100,100,1.0)",vars);
+                        a = false;
+                        return false;
+                    }else if(value !== this){
+                        a = true;
+                    }
+                });
+            }else{
+                a = true;
+            }
+            return a;
+        };
     };
 
     //Inventory class
@@ -162,7 +262,7 @@ define(["maintenance","vars"],function (maint,vars) {
                 let item = value.object;
                 if(maint.isReachable(item)){
                     //Getting orinal item
-                    let origin = maint.getItem(item.id,vars);
+                    let origin = itemList.getItem(item.id);
                     //Getting width and height of item
                     let w = origin.sprite.w;
                     let h = origin.sprite.h;
@@ -192,7 +292,7 @@ define(["maintenance","vars"],function (maint,vars) {
                 //If it exist draw it
                 if(maint.isReachable(item)){
                     //Creating original copy of item
-                    let origin = maint.getItem(item.id,vars);
+                    let origin = itemList.getItem(item.id);
 
                     //Getting width and height of item
                     let w = origin.sprite.w;
@@ -218,7 +318,7 @@ define(["maintenance","vars"],function (maint,vars) {
 
             //If item is chosen draw it's info
             if(maint.isReachable(this.chosen) && maint.isReachable(this.chosen.object)){
-                let origin = maint.getItem(this.chosen.object.id,vars);
+                let origin = itemList.getItem(this.chosen.object.id);
 
                 //Setting text colors and font
                 vars.ctx.srtokeStyle = "rgba(255,255,255,1.0)";
@@ -349,18 +449,18 @@ define(["maintenance","vars"],function (maint,vars) {
         addItem = function(item){
             //Checking if item is ammo or is stackable
 
-                let originItem = maint.getItem(item.id,vars);
+                let originItem = itemList.getItem(item.id);
                 if(item.type === "ammo" || item.isStackable) {
                     //Searching if there is an item to stack with
                     for (let value of this.slots) {
                         if (maint.isReachable(value.object)) {
-                            let originStoredItem = maint.getItem(value.object.id);
+                            let originStoredItem = itemList.getItem(value.object.id);
                             if (originItem === originStoredItem) {
                                 if (maint.isReachable(value.object.meta)) {
                                     value.meta.amount = maint.isReachable(value.object.meta.amount) ? value.meta.amount + item.meta.amount : 1 + item.meta.amount;
                                     return true;
                                 } else {
-                                    value.meta = {"amount": 1 + item.meta.amount}
+                                    value.meta = {"amount": 1 + item.meta.amount};
                                     return true;
                                 }
                             }
@@ -432,7 +532,7 @@ define(["maintenance","vars"],function (maint,vars) {
 
         //Equipment getters
         getWeapon = function(){
-            return maint.isReachable(this.equipment.weapon) ? maint.getItem(11,vars) : null; //Getting hands item(yea it's item)
+            return maint.isReachable(this.equipment.weapon) ? itemList.getItem(11) : null; //Getting hands item(yea it's item)
         };
         getArmor = function(){
             return maint.isReachable(this.equipment.armor) ? this.equipment.armor : null;
@@ -449,7 +549,6 @@ define(["maintenance","vars"],function (maint,vars) {
 
 
     };
-
 
     //Player class
     classes.Player = class {
@@ -542,18 +641,19 @@ define(["maintenance","vars"],function (maint,vars) {
                 this.timeFromLastAttack += vars.dt;
                 //Checking, then attacking
                 if(!this.isDead){
-                    if (this.attack === true && this.timeFromLastAttack >= maint.getItem(this.inventory.getWeapon().id,vars).cooldown) {
+                    if (this.attack === true && this.timeFromLastAttack >= itemList.getItem(this.inventory.getWeapon().id).cooldown) {
                         let temp = false;
                         let playerWeapon = this.inventory.getWeapon();
-                        if(maint.getItem(playerWeapon.id,vars).weaponType === "melee"){
-                            if (maint.getItem(playerWeapon.id,vars).dmgType === "point") {
+                        let origin = itemList.getItem(playerWeapon.id);
+                        if(origin.weaponType === "melee"){
+                            if (origin.dmgType === "point") {
                                 maint.checkPlayerThanPointAttack(vars);
-                            } else if (maint.getItem(playerWeapon,vars).dmgType === "area") {
+                            } else if (origin.dmgType === "area") {
                                 maint.checkPlayerThanAreaAttack(vars);
                             }
                             this.timeFromLastAttack = 0;
                         }
-                        else if(maint.getItem(playerWeapon.id,vars).weaponType === "ranged" && maint.isThereAmmo(this,vars)){
+                        else if(origin.weaponType === "ranged" && maint.isThereAmmo(this, vars)){
                             let x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // unchanged
                             let y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // minus on the Sin
 
@@ -566,8 +666,8 @@ define(["maintenance","vars"],function (maint,vars) {
                             classes.genProjectile(vars,1,x2,y2,speedX,speedY,false);
                             this.timeFromLastAttack = 0;
                         }
-                        else if(maint.getItem(playerWeapon.id,vars).weaponType === "staff"){
-                            this.timeFromLastAttack = maint.getItem(playerWeapon.id,vars).action(this) === true ? 0 : this.timeFromLastAttack;
+                        else if(origin.weaponType === "staff"){
+                            this.timeFromLastAttack = origin.action(this) === true ? 0 : this.timeFromLastAttack;
                         }
                         this.isAttackDrawn = true;
 
@@ -675,40 +775,40 @@ define(["maintenance","vars"],function (maint,vars) {
 
     };
 
-
-
-
-
-
     //Like bullet
-    classes.Delpoyable = function(x,y,vx,vy,id,time) {
-        this.x = 0 + x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.id = id;
-        this.time = time;
-        this.living = 0;
-        this.lastDest = {};
-    };
-    classes.Delpoyable.prototype.update = function (dt,projectileTypes) {
-        if(maint.isReachable(this.isMovingTowards) && this.isMovingTowards === true){
-            this.x += Math.abs(this.vx) * maint.getVelocityTo(this.lastDest,this).x * dt;
-            this.y += Math.abs(this.vy) * maint.getVelocityTo(this.lastDest,this).y * dt;
-        }else{
-            this.x += this.vx * dt;
-            this.y += this.vy * dt;
-        }
-        if(maint.isReachable(maint.getProjectile(this.id,projectileTypes))){
-            maint.getProjectile(this.id,projectileTypes).action(this);
-        }
-        this.living += dt;
+    classes.Delpoyable = class{
+        constructor(x,y,vx,vy,id,time){
+            this.x = 0 + x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.id = id;
+            this.time = time;
+            this.living = 0;
+            this.lastDest = {};
+        };
 
+        update = function(dt,projectileTypes) {
+            if(maint.isReachable(this.isMovingTowards) && this.isMovingTowards === true){
+                this.x += Math.abs(this.vx) * maint.getVelocityTo(this.lastDest,this).x * dt;
+                this.y += Math.abs(this.vy) * maint.getVelocityTo(this.lastDest,this).y * dt;
+            }else{
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+            }
+            if(maint.isReachable(maint.getProjectile(this.id,projectileTypes))){
+                maint.getProjectile(this.id,projectileTypes).action(this);
+            }
+            this.living += dt;
+
+        };
+
+        moveTowards = function(x,y) {
+            this.lastDest = {"x":x,"y":y};
+            this.isMovingTowards = true;
+        };
     };
-    classes.Delpoyable.prototype.moveTowards = function (x,y) {
-        this.lastDest = {"x":x,"y":y};
-        this.isMovingTowards = true;
-    };
+
     classes.genProjectile = function(vars,id,x,y,vx,vy,moveTowards,destX,destY){
         vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(x, y, vx, vy, id, maint.getProjectile(id,vars.projectileTypes).time);
         if(maint.isReachable(moveTowards) && moveTowards === true && maint.isReachable(destX) && maint.isReachable(destY)){
@@ -717,169 +817,134 @@ define(["maintenance","vars"],function (maint,vars) {
     };
 
     //Menus
+
     //Shop
-    classes.Shop = function(items,x,y,type,money,keeper){
-        this.items = items;
-        this.x = x;
-        this.y = y;
-        this.w = 343;
-        this.h = 400;
-        this.visible = false;
-        this.type = "shop";
-        this.pos = 0;
-        this.buttons = [];
-        for(var i = 0;i < 4;i++){
-            this.buttons[i] = {"x":this.x + 280,"y":this.y + 100 * i + 50};
-        }
-        this.shopType = type;
-        this.money = money;
-        this.keeper = keeper;
-    };
-    classes.Shop.prototype.drawShop = function (vars){
-        vars.ctx.drawImage(vars.shopSprite,this.x,this.y);
-        var count = 0;
-        for(var i = this.pos;i < this.pos + 4;i++){
-            if(maint.isReachable(this.items[i]) && maint.isReachable(this.items[i].sprite)){
-                if(count === 0){
-                    this.items[i].sprite.draw(vars.gameTime,vars.ctx,this.x + 26,this.y + 43);
-                    vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
-                    vars.ctx.font = "10px Arial";
-                    maint.wrapText(vars.ctx,this.items[i].description,this.x + 70,this.y + 60,215,15);
-                    maint.wrapText(vars.ctx,this.items[i].cost,this.x + 300,this.y + 60,215,15);
-                    vars.ctx.drawImage(vars.acceptButtonSprite,this.buttons[0].x, this.buttons[0].y);
-
-                }else{
-                    this.items[i].sprite.draw(vars.gameTime,vars.ctx,this.x + 26,this.y + (95 * count) + 43);
-                    vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
-                    maint.wrapText(vars.ctx,this.items[i].description,this.x + 70,this.y + 90 * count + 70,215,15);
-                    maint.wrapText(vars.ctx,this.items[i].cost,this.x + 300,this.y + 100 * count + 50,215,15);
-                    vars.ctx.drawImage(vars.acceptButtonSprite,this.buttons[count].x, this.buttons[count].y);
-                }
+    classes.Shop = class{
+        constructor(items,x,y,type,money,keeper){
+            this.items = items;
+            this.x = x;
+            this.y = y;
+            this.w = 343;
+            this.h = 400;
+            this.visible = false;
+            this.type = "shop";
+            this.pos = 0;
+            this.buttons = [];
+            for(var i = 0;i < 4;i++){
+                this.buttons[i] = {"x":this.x + 280,"y":this.y + 100 * i + 50};
             }
-            count++;
-        }
-        vars.ctx.font = "12px Arial";
-        vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
-        maint.wrapText(vars.ctx,this.keeper.name + "'s money: " + this.keeper.money,this.x + 20,this.y + 30,100,10);
-    };
-    classes.Shop.prototype.updateShop = function (vars){
-        if(vars.events.isWheel === true){
-            if( vars.mouseX > this.x && vars.mouseX < this.x + this.w && vars.mouseY > this.y && vars.mouseY < this.y + this.h){
-                if(vars.events.deltaY > 0 && this.pos + 1 <= this.items.length){
-                    this.pos += 1;
-                }else if(vars.events.deltaY < 0 && this.pos - 1 >= 0){
-                    this.pos -= 1;
-                }else{
+            this.shopType = type;
+            this.money = money;
+            this.keeper = keeper;
+        };
 
-                }
-            }
-        }
-        for(let i = 0;i < 4;i++) {
-            if(vars.events.isLeftMouseReleased && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
-                if(vars.player.money >= this.items[i + this.pos].cost){
+        drawShop = function (vars){
+            vars.ctx.drawImage(vars.shopSprite,this.x,this.y);
+            var count = 0;
+            for(var i = this.pos;i < this.pos + 4;i++){
+                if(maint.isReachable(this.items[i]) && maint.isReachable(this.items[i].sprite)){
+                    if(count === 0){
+                        this.items[i].sprite.draw(vars.gameTime,vars.ctx,this.x + 26,this.y + 43);
+                        vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
+                        vars.ctx.font = "10px Arial";
+                        maint.wrapText(vars.ctx,this.items[i].description,this.x + 70,this.y + 60,215,15);
+                        maint.wrapText(vars.ctx,this.items[i].cost,this.x + 300,this.y + 60,215,15);
+                        vars.ctx.drawImage(vars.acceptButtonSprite,this.buttons[0].x, this.buttons[0].y);
 
-                    let isChecked = null;
-                    let item = this.items[i + this.pos];
-                    //Checking if player has space in inventory
-                    for(let index in vars.player.inventory){
-                        let value  = vars.player.inventory[index];
-
-                        if(!maint.isReachable(value.object)){
-                            isChecked =  + index;
-                            return true;
-                        }
+                    }else{
+                        this.items[i].sprite.draw(vars.gameTime,vars.ctx,this.x + 26,this.y + (95 * count) + 43);
+                        vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
+                        maint.wrapText(vars.ctx,this.items[i].description,this.x + 70,this.y + 90 * count + 70,215,15);
+                        maint.wrapText(vars.ctx,this.items[i].cost,this.x + 300,this.y + 100 * count + 50,215,15);
+                        vars.ctx.drawImage(vars.acceptButtonSprite,this.buttons[count].x, this.buttons[count].y);
                     }
+                }
+                count++;
+            }
+            vars.ctx.font = "12px Arial";
+            vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
+            maint.wrapText(vars.ctx,this.keeper.name + "'s money: " + this.keeper.money,this.x + 20,this.y + 30,100,10);
+        };
 
-                    if(maint.getItem(item.id,vars).type !== "ammo" && maint.isReachable(isChecked)){
-                        vars.player.inventory[isChecked].object = {};
-                        vars.player.inventory[isChecked].object.id = item.id;
-                        vars.player.inventory[isChecked].object.x = 0;
-                        vars.player.inventory[isChecked].object.y = 0;
+        updateShop = function (vars){
+            if(vars.events.isWheel === true){
+                if( vars.mouseX > this.x && vars.mouseX < this.x + this.w && vars.mouseY > this.y && vars.mouseY < this.y + this.h){
+                    if(vars.events.deltaY > 0 && this.pos + 1 <= this.items.length){
+                        this.pos += 1;
+                    }else if(vars.events.deltaY < 0 && this.pos - 1 >= 0){
+                        this.pos -= 1;
+                    }else{
 
-                        //Money operations
-                        vars.player.money -= item.cost;
-                        this.keeper.money += item.cost;
-                    }else if(maint.getItem(item.id,vars).type === "ammo"){
-                        let ir = true;
-                        //Adding amount of arrows to slot with same ammo
-                        for (let u = 0; u < 9; u++) {
-                            if (vars.player.inventory[u].isEmpty === false && maint.isReachable(maint.getItem(vars.player.inventory[u].object.id,vars).ammoFor) && maint.getItem(vars.player.inventory[u].object.id,vars).ammoFor === item.ammoFor) {
-                                vars.player.inventory[u].object.amount += item.meta.amount;
-                                ir = false;
-                                break;
+                    }
+                }
+            }
+            for(let i = 0;i < 4;i++) {
+                if(vars.events.isLeftMouseReleased && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
+                    if(vars.player.money >= this.items[i + this.pos].cost){
+
+                        let isChecked = null;
+                        let item = this.items[i + this.pos];
+                        //Checking if player has space in inventory
+                        for(let index in vars.player.inventory){
+                            let value  = vars.player.inventory[index];
+
+                            if(!maint.isReachable(value.object)){
+                                isChecked =  + index;
+                                return true;
                             }
                         }
-                        //Adding new item to a new slot
-                        if(ir){
-                            for (let w = 0; w < 9; w++) {
-                                if (vars.player.inventory[w].isEmpty) {
-                                    vars.player.inventory[w].isEmpty = false;
-                                    vars.player.inventory[w].object = {"inventoryId":w,"id":item.id,"amount":maint.isReachable(item.amount) ? item.amount : null};
+
+                        if(itemList.getItem(item.id).type !== "ammo" && maint.isReachable(isChecked)){
+                            vars.player.inventory[isChecked].object = {};
+                            vars.player.inventory[isChecked].object.id = item.id;
+                            vars.player.inventory[isChecked].object.x = 0;
+                            vars.player.inventory[isChecked].object.y = 0;
+
+                            //Money operations
+                            vars.player.money -= item.cost;
+                            this.keeper.money += item.cost;
+                        }else if(itemList.getItem(item.id).type === "ammo"){
+                            let ir = true;
+                            //Adding amount of arrows to slot with same ammo
+                            for (let u = 0; u < 9; u++) {
+                                if (vars.player.inventory[u].isEmpty === false && maint.isReachable(itemList.getItem(vars.player.inventory[u].object.id).ammoFor) && itemList.getItem(vars.player.inventory[u].object.id).ammoFor === item.ammoFor) {
+                                    vars.player.inventory[u].object.amount += item.meta.amount;
                                     ir = false;
                                     break;
                                 }
                             }
+                            //Adding new item to a new slot
+                            if(ir){
+                                for (let w = 0; w < 9; w++) {
+                                    if (vars.player.inventory[w].isEmpty) {
+                                        vars.player.inventory[w].isEmpty = false;
+                                        vars.player.inventory[w].object = {"inventoryId":w,"id":item.id,"amount":maint.isReachable(item.amount) ? item.amount : null};
+                                        ir = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            vars.player.money -= item.cost;
+                            this.keeper.money += item.cost;
+                        }else{
+                            maint.genTextAlert("Your inventory is full","rgba(255,200,200,1.0)",vars);
+                            break;
                         }
-                        vars.player.money -= item.cost;
-                        this.keeper.money += item.cost;
+
+
+                        break;
+
+
                     }else{
-                        maint.genTextAlert("Your inventory is full","rgba(255,200,200,1.0)",vars);
+                        maint.genTextAlert("You can't aford this","rgba(255,200,200,1.0)",vars);
                         break;
                     }
 
-
-                    break;
-
-
-                }else{
-                    maint.genTextAlert("You can't aford this","rgba(255,200,200,1.0)",vars);
-                    break;
                 }
-
             }
-        }
+        };
     };
-
-    //Upgrade stats
-    classes.UpgradeMenu = function(vars) {
-        this.sprite = new classes.Sprite([{"px":0,"py":0,"pw":vars.upgradeMenuSprite.width,"ph":vars.upgradeMenuSprite.height,"w":vars.upgradeMenuSprite.width,"h":vars.upgradeMenuSprite.height}],vars.upgradeMenuSprite);
-        this.x = 200;
-        this.y = 200;
-        this.type = "upgrade";
-        this.health  = {"x":16,"y":86,"w":50,"h":35};
-        this.stamina = {"x":94,"y":88,"w":26,"h":12};
-        this.mana    = {"x":154,"y":88,"w":35,"h":12};
-
-    };
-    classes.UpgradeMenu.prototype.drawUpgrades = function(vars) {
-        this.sprite.draw(vars.gameTime,vars.ctx,this.x,this.y);
-    };
-    classes.UpgradeMenu.prototype.updateUpgradeMenu = function(vars) {
-        if(vars.events.isLeftMouseReleased){
-            if(vars.mouseX > this.x && vars.mouseX < this.x + 204 && vars.mouseY > this.y + 66 && vars.mouseY < this.y + 143) {
-                if (vars.player.upgradePoints > 0 && vars.mouseX > this.health.x + this.x && vars.mouseX < this.health.x + this.health.w + this.x && vars.mouseY > this.health.y + this.y && vars.mouseY < this.health.y + this.health.h + this.y) {
-                    vars.player.maxHp += 10 * (vars.player.level * 0.2);
-                    vars.player.upgradePoints--;
-                } else if (vars.player.upgradePoints > 0 && vars.mouseX > this.stamina.x + this.x && vars.mouseX < this.stamina.x + this.stamina.w + this.x && vars.mouseY > this.stamina.y + this.y && vars.mouseY < this.stamina.y + this.stamina.h + this.y) {
-                    vars.player.maxStamina += 10 * (vars.player.level * 0.2);
-                    vars.player.fightingSkill++;
-                    vars.player.defSkill++;
-                    vars.player.upgradePoints--;
-                } else if (vars.player.upgradePoints > 0 && vars.mouseX > this.mana.x + this.x && vars.mouseX < this.mana.x + this.mana.w + this.x && vars.mouseY > this.mana.y + this.y && vars.mouseY < this.mana.y + this.mana.h + this.y) {
-                    vars.player.maxMana += 10 * (vars.player.level * 0.2);
-                    vars.player.magicSkill++;
-                    vars.player.upgradePoints--;
-                    vars.player.lastManaLoose = vars.lastTime;
-                } else if (vars.player.upgradePoints < 1) {
-                    maint.genTextAlert("You don't have enough upgrade points", "rgba(255,200,200,1.0)", vars);
-                }
-            }else if(vars.mouseX > this.x + 192 && vars.mouseX < this.x + 231 && vars.mouseY > this.y + 8 && vars.mouseY < this.y + 55){
-                vars.upgradeMenu.isOpened = false;
-            }
-        }
-    };
-
-
+    //Shop getters
     classes.isShopOpened = function(menues) {
         var temp = false;
         jQuery.each(menues,function (index,value) {
@@ -921,6 +986,49 @@ define(["maintenance","vars"],function (maint,vars) {
         return temp;
     };
 
+    //Upgrade stats menu
+    classes.UpgradeMenu = class{
+        constructor(vars) {
+            this.sprite = new classes.Sprite([{"px":0,"py":0,"pw":vars.upgradeMenuSprite.width,"ph":vars.upgradeMenuSprite.height,"w":vars.upgradeMenuSprite.width,"h":vars.upgradeMenuSprite.height}],vars.upgradeMenuSprite);
+            this.x = 200;
+            this.y = 200;
+            this.type = "upgrade";
+            this.health  = {"x":16,"y":86,"w":50,"h":35};
+            this.stamina = {"x":94,"y":88,"w":26,"h":12};
+            this.mana    = {"x":154,"y":88,"w":35,"h":12};
+
+        };
+
+        drawUpgrades = function(vars) {
+            this.sprite.draw(vars.gameTime,vars.ctx,this.x,this.y);
+        };
+
+        updateUpgradeMenu = function(vars) {
+            if(vars.events.isLeftMouseReleased){
+                if(vars.mouseX > this.x && vars.mouseX < this.x + 204 && vars.mouseY > this.y + 66 && vars.mouseY < this.y + 143) {
+                    if (vars.player.upgradePoints > 0 && vars.mouseX > this.health.x + this.x && vars.mouseX < this.health.x + this.health.w + this.x && vars.mouseY > this.health.y + this.y && vars.mouseY < this.health.y + this.health.h + this.y) {
+                        vars.player.maxHp += 10 * (vars.player.level * 0.2);
+                        vars.player.upgradePoints--;
+                    } else if (vars.player.upgradePoints > 0 && vars.mouseX > this.stamina.x + this.x && vars.mouseX < this.stamina.x + this.stamina.w + this.x && vars.mouseY > this.stamina.y + this.y && vars.mouseY < this.stamina.y + this.stamina.h + this.y) {
+                        vars.player.maxStamina += 10 * (vars.player.level * 0.2);
+                        vars.player.fightingSkill++;
+                        vars.player.defSkill++;
+                        vars.player.upgradePoints--;
+                    } else if (vars.player.upgradePoints > 0 && vars.mouseX > this.mana.x + this.x && vars.mouseX < this.mana.x + this.mana.w + this.x && vars.mouseY > this.mana.y + this.y && vars.mouseY < this.mana.y + this.mana.h + this.y) {
+                        vars.player.maxMana += 10 * (vars.player.level * 0.2);
+                        vars.player.magicSkill++;
+                        vars.player.upgradePoints--;
+                        vars.player.lastManaLoose = vars.lastTime;
+                    } else if (vars.player.upgradePoints < 1) {
+                        maint.genTextAlert("You don't have enough upgrade points", "rgba(255,200,200,1.0)", vars);
+                    }
+                }else if(vars.mouseX > this.x + 192 && vars.mouseX < this.x + 231 && vars.mouseY > this.y + 8 && vars.mouseY < this.y + 55){
+                    vars.upgradeMenu.isOpened = false;
+                }
+            }
+        };
+    };
+
     //Quests
     classes.Quest = function(name,desc,loot,action){
         this.name = name;
@@ -930,157 +1038,169 @@ define(["maintenance","vars"],function (maint,vars) {
         this.isFinished = false;
     };
 
-
-    classes.Tile = function(tx, ty, tt) {
-        this.x = tx;
-        this.y = ty;
-        this.type = tt;
-        this.roof = null;
-        this.roofType = 0;
-        this.eventEnter = null;
-        this.itemStack = null;
+    //Tiles
+    classes.Tile = class{
+        constructor(tx, ty, tt) {
+            this.x = tx;
+            this.y = ty;
+            this.type = tt;
+            this.roof = null;
+            this.roofType = 0;
+            this.eventEnter = null;
+            this.itemStack = null;
+        };
     };
 
-    classes.Map = function(tileW,tileH) {
-        this.map = [];
-        this.w = 0;
-        this.h = 0;
-        this.tileH = tileW;
-        this.tileW = tileH;
-        this.objects = [];
-        this.items = [];
-        this.enemies = [];
-        this.delpoyables = [];
-        this.spawners = [];
-    };
-    classes.Map.prototype.build = function (data,w,h) {
-        this.w = w;
-        this.h = h;
 
-        if(data.length !== w*h){
-            return false;
-        }
-        this.map.length = 0;
-        for(var y = 0;y < this.h;y++){
-            for(var x = 0;x < this.w;x++){
-                this.map.push(data[maint.toIndex(x,y,this)]);
+    classes.Map = class{
+        constructor(tileW,tileH) {
+            this.map = [];
+            this.w = 0;
+            this.h = 0;
+            this.tileH = tileW;
+            this.tileW = tileH;
+            this.objects = [];
+            this.items = [];
+            this.enemies = [];
+            this.delpoyables = [];
+            this.spawners = [];
+        };
+
+        build = function (data,w,h) {
+            this.w = w;
+            this.h = h;
+
+            if(data.length !== w*h){
+                return false;
             }
-        }
-        return true;
+            this.map.length = 0;
+            for(var y = 0;y < this.h;y++){
+                for(var x = 0;x < this.w;x++){
+                    this.map.push(data[maint.toIndex(x,y,this)]);
+                }
+            }
+            return true;
+        };
     };
 
     //Camera functions
-    classes.Rectangle = function(left, top, width, height){
-        this.left = left || 0;
-        this.top = top || 0;
-        this.width = width || 0;
-        this.height = height || 0;
-        this.right = this.left + this.width;
-        this.bottom = this.top + this.height;
-    };
-    classes.Rectangle.prototype.set = function(left, top, /*optional*/width, /*optional*/height){
-        this.left = left;
-        this.top = top;
-        this.width = width || this.width;
-        this.height = height || this.height;
-        this.right = (this.left + this.width);
-        this.bottom = (this.top + this.height);
-    };
-    classes.Rectangle.prototype.within = function(r) {
-        return (r.left <= this.left &&
-            r.right >= this.right &&
-            r.top <= this.top &&
-            r.bottom >= this.bottom);
-    };
-    classes.Rectangle.prototype.overlaps = function(r) {
-        return (this.left < r.right &&
-            r.left < this.right &&
-            this.top < r.bottom &&
-            r.top < this.bottom);
-    };
+    classes.Rectangle = class{
+        constructor(left, top, width, height){
+            this.left = left || 0;
+            this.top = top || 0;
+            this.width = width || 0;
+            this.height = height || 0;
+            this.right = this.left + this.width;
+            this.bottom = this.top + this.height;
+        };
 
+        set = function(left, top, /*optional*/width, /*optional*/height){
+            this.left = left;
+            this.top = top;
+            this.width = width || this.width;
+            this.height = height || this.height;
+            this.right = (this.left + this.width);
+            this.bottom = (this.top + this.height);
+        };
 
+        within = function(r) {
+            return (r.left <= this.left &&
+                r.right >= this.right &&
+                r.top <= this.top &&
+                r.bottom >= this.bottom);
+        };
+
+        overlaps = function(r) {
+            return (this.left < r.right &&
+                r.left < this.right &&
+                this.top < r.bottom &&
+                r.top < this.bottom);
+        };
+    };
 
     //Camera
     // Camera constructor
-    classes.Camera = function(xView, yView, canvasWidth, canvasHeight, worldWidth, worldHeight){
-        // possibles axis to move the camera
-        this.AXIS = {
-            NONE: "none",
-            HORIZONTAL: "horizontal",
-            VERTICAL: "vertical",
-            BOTH: "both"
+    classes.Camera = class{
+        constructor(xView, yView, canvasWidth, canvasHeight, worldWidth, worldHeight){
+            // possibles axis to move the camera
+            this.AXIS = {
+                NONE: "none",
+                HORIZONTAL: "horizontal",
+                VERTICAL: "vertical",
+                BOTH: "both"
+            };
+            // position of camera (left-top coordinate)
+            this.xView = xView || 0;
+            this.yView = yView || 0;
+
+            // distance from followed object to border before camera starts move
+            this.xDeadZone = 0; // min distance to horizontal borders
+            this.yDeadZone = 0; // min distance to vertical borders
+
+            // viewport dimensions
+            this.wView = canvasWidth;
+            this.hView = canvasHeight;
+
+            // allow camera to move in vertical and horizontal axis
+            this.axis = this.AXIS.BOTH;
+
+            // object that should be followed
+            this.followed = null;
+
+            // rectangle that represents the viewport
+            this.viewportRect = new classes.Rectangle(this.xView, this.yView, this.wView, this.hView);
+
+            // rectangle that represents the world's boundary (room's boundary)
+            this.worldRect = new classes.Rectangle(0, 0, worldWidth, worldHeight);
+
         };
-        // position of camera (left-top coordinate)
-        this.xView = xView || 0;
-        this.yView = yView || 0;
 
-        // distance from followed object to border before camera starts move
-        this.xDeadZone = 0; // min distance to horizontal borders
-        this.yDeadZone = 0; // min distance to vertical borders
+        follow = function(gameObject, xDeadZone, yDeadZone){
+            this.followed = gameObject;
+            this.xDeadZone = xDeadZone;
+            this.yDeadZone = yDeadZone;
+        };
 
-        // viewport dimensions
-        this.wView = canvasWidth;
-        this.hView = canvasHeight;
+        update = function(){
+            // keep following the player (or other desired object)
+            if(this.followed != null){
+                if(this.axis === this.AXIS.HORIZONTAL || this.axis === this.AXIS.BOTH)
+                {
+                    // moves camera on horizontal axis based on followed object position
+                    if(this.followed.x - this.xView  + this.xDeadZone > this.wView)
+                        this.xView = this.followed.x - (this.wView - this.xDeadZone);
+                    else if(this.followed.x  - this.xDeadZone < this.xView)
+                        this.xView = this.followed.x  - this.xDeadZone;
 
-        // allow camera to move in vertical and horizontal axis
-        this.axis = this.AXIS.BOTH;
-
-        // object that should be followed
-        this.followed = null;
-
-        // rectangle that represents the viewport
-        this.viewportRect = new classes.Rectangle(this.xView, this.yView, this.wView, this.hView);
-
-        // rectangle that represents the world's boundary (room's boundary)
-        this.worldRect = new classes.Rectangle(0, 0, worldWidth, worldHeight);
-
-    };
-    // gameObject needs to have "x" and "y" properties (as world(or room) position)
-    classes.Camera.prototype.follow = function(gameObject, xDeadZone, yDeadZone){
-        this.followed = gameObject;
-        this.xDeadZone = xDeadZone;
-        this.yDeadZone = yDeadZone;
-    };
-    classes.Camera.prototype.update = function(){
-        // keep following the player (or other desired object)
-        if(this.followed != null){
-            if(this.axis === this.AXIS.HORIZONTAL || this.axis === this.AXIS.BOTH)
-            {
-                // moves camera on horizontal axis based on followed object position
-                if(this.followed.x - this.xView  + this.xDeadZone > this.wView)
-                    this.xView = this.followed.x - (this.wView - this.xDeadZone);
-                else if(this.followed.x  - this.xDeadZone < this.xView)
-                    this.xView = this.followed.x  - this.xDeadZone;
+                }
+                if(this.axis === this.AXIS.VERTICAL || this.axis === this.AXIS.BOTH)
+                {
+                    // moves camera on vertical axis based on followed object position
+                    if(this.followed.y - this.yView + this.yDeadZone > this.hView)
+                        this.yView = this.followed.y - (this.hView - this.yDeadZone);
+                    else if(this.followed.y - this.yDeadZone < this.yView)
+                        this.yView = this.followed.y - this.yDeadZone;
+                }
 
             }
-            if(this.axis === this.AXIS.VERTICAL || this.axis === this.AXIS.BOTH)
+
+            // update viewportRect
+            this.viewportRect.set(this.xView, this.yView);
+
+            // don't var camera leaves the world's boundary
+            if(!this.viewportRect.within(this.worldRect))
             {
-                // moves camera on vertical axis based on followed object position
-                if(this.followed.y - this.yView + this.yDeadZone > this.hView)
-                    this.yView = this.followed.y - (this.hView - this.yDeadZone);
-                else if(this.followed.y - this.yDeadZone < this.yView)
-                    this.yView = this.followed.y - this.yDeadZone;
+                if(this.viewportRect.left < this.worldRect.left)
+                    this.xView = this.worldRect.left;
+                if(this.viewportRect.top < this.worldRect.top)
+                    this.yView = this.worldRect.top;
+                if(this.viewportRect.right > this.worldRect.right)
+                    this.xView = this.worldRect.right - this.wView;
+                if(this.viewportRect.bottom > this.worldRect.bottom)
+                    this.yView = this.worldRect.bottom - this.hView;
             }
 
-        }
-
-        // update viewportRect
-        this.viewportRect.set(this.xView, this.yView);
-
-        // don't var camera leaves the world's boundary
-        if(!this.viewportRect.within(this.worldRect))
-        {
-            if(this.viewportRect.left < this.worldRect.left)
-                this.xView = this.worldRect.left;
-            if(this.viewportRect.top < this.worldRect.top)
-                this.yView = this.worldRect.top;
-            if(this.viewportRect.right > this.worldRect.right)
-                this.xView = this.worldRect.right - this.wView;
-            if(this.viewportRect.bottom > this.worldRect.bottom)
-                this.yView = this.worldRect.bottom - this.hView;
-        }
-
+        };
     };
 
     return classes;

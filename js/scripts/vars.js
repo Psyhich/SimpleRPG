@@ -88,6 +88,7 @@ define([],function () {
         vars.events.keys["is" + numberToUse + "Pressed"] = false;
         vars.events.keys["is" + numberToUse + "Released"] = false;
     }
+
     vars.config = {};
     vars.createRuned = false;
     vars.Game = {};
@@ -112,39 +113,62 @@ define([],function () {
     vars.acceptButtonSprite = null;
     vars.shopSprite = null;
     vars.alertSprite = null;
-    vars.tilesSprite = null;
-    vars.bookSprites = null;
-    vars.skillsSprite = null;
-    vars.expSprite = null;
-    vars.moneySprites = null;
-    vars.consumablesSprite = null;
-    vars.swordsSpriteSheet = null;
     vars.inventorySprite = null;
-    vars.armorSprites = null;
     vars.playerUISprite = null;
-    vars.shieldsSprite = null;
-    vars.questItemsSprite = null;
-    vars.scrollSprite = null;
     vars.playerHotbarSprite = null;
     vars.skillsMenuSprite = null;
     vars.upgradeMenuSprite = null;
-    vars.bowsSprites = null;
-    vars.arrowsSprite = null;
     vars.radiosSprite = null;
     vars.configsSprite = null;
     vars.menuSprite = null;
-    vars.staffsSprite = null;
 
-    //Buttons
-    vars.inventoryButtonSprite = null;
+
+    //Items and tiles sprite sheets
+    //Items
+    vars.moneySprites = null;
+    vars.shieldsSprite = null;
+    vars.questItemsSprite = null;
+    vars.scrollSprite = null;
+    vars.bowsSprites = null;
+    vars.arrowsSprite = null;
+    vars.staffsSprite = null;
+    vars.bookSprites = null;
+    vars.consumablesSprite = null;
+    vars.swordsSpriteSheet = null;
+    vars.armorSprites = null;
+
+    //Tiles
+    vars.tilesSprite = null;
+
+    //Skill previews
+    vars.skillsSprite = null;
+    //Exp
+    vars.expSprite = null;
+
+    //Splited sprite arrays
+    vars.chestplates = [];
+    vars.helmets = [];
+    vars.swords = [];
+    vars.bows = [];
+    vars.shields = [];
+    vars.cQuestItems = [];
+    vars.consumables = [];
+    vars.money = [];
+    vars.arrows = [];
+    vars.staffs = [];
+    vars.books = [];
+
+    //Buttons //TODO implement therm
+    /*vars.inventoryButtonSprite = null;
     vars.attackButtonSprite = null;
     vars.controllerSprite = null;
     vars.pauseButtonSprite = null;
-    vars.interactButtonSprite = null;
+    vars.interactButtonSprite = null;*/
+
     //Map
     vars.map;
 
-    //Touch input(not realised)
+    //Touch input(not realised) //TODO implement
     vars.touchCache = [];
     //Phone and others input buttons(not realised)
     vars.inventoryButton = null;
@@ -155,14 +179,11 @@ define([],function () {
 
     //Player
     vars.player = {};
-    vars.playerInventory = {};
-    vars.inventoryLength = 9;
     vars.playerAttackBox = {};
     vars.playerHotbar = {};
     vars.players = [];
 
     //Enemies
-
     vars.spawners = [];
 
     //NPC
@@ -170,18 +191,9 @@ define([],function () {
     vars.npcPlayers = [];
     vars.questGiver = null;
 
-    //Item sprites arrays
+    //Item
     vars.items = [];
-    vars.chestPlates = [];
-    vars.helmets = [];
-    vars.swords = [];
-    vars.bows = [];
-    vars.shields = [];
-    vars.cQuestItems = [];
-    vars.consumables = [];
-    vars.money = [];
-    vars.arrows = [];
-    vars.staffs = [];
+
 
     //Samples
     vars.sScroll = {};
@@ -190,14 +202,13 @@ define([],function () {
     vars.sMoney = {};
     vars.sTrader = {};
 
-    //uni Drops
+    //uni Drops //TODO reassign this values to player
     vars.uniCommonDrops = [];
     vars.uniRareDrops = [];
     vars.uniEpicDrops = [];
     vars.uniLegendaryDrops = [];
 
     //Objects
-    vars.inventory = {};
     vars.playerUI = {};
     vars.floorTypes = {};
     vars.shop = {};
