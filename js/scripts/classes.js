@@ -1,35 +1,43 @@
-define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
+define(["maintenance","vars"],function (maint,vars) {
     let classes = {};
+
+    //Should be initialised before work
+    let itemList = null;
+    classes.ini = function(receivedItemList){
+        itemList = receivedItemList;
+    };
+
 
     //Sprite
     classes.Sprite = class{
         constructor(data,img) {
             if(img === null || img === undefined){
-                return false;
-            }
-            this.animated = data.length > 1;
-            this.frameCount = data.length;
-            this.duration = 0;
-            this.loop = true;
-            this.img = img;
-            if(data.length > 1){
-                for(let i in data){
-                    if(typeof data[i].d === undefined){
-                        data[i].d = 100;
-                    }
-                    this.duration += data[i].d;
-                    if(typeof data[i].loop !== undefined){
-                        this.loop = data[i].loop ? true : false;
+
+            }else {
+                this.animated = data.length > 1;
+                this.frameCount = data.length;
+                this.duration = 0;
+                this.loop = true;
+                this.img = img;
+                if (data.length > 1) {
+                    for (let i in data) {
+                        if (typeof data[i].d === undefined) {
+                            data[i].d = 100;
+                        }
+                        this.duration += data[i].d;
+                        if (typeof data[i].loop !== undefined) {
+                            this.loop = data[i].loop ? true : false;
+                        }
                     }
                 }
+                this.frames = data;
+                this.w = 0;
+                this.h = 0;
             }
-            this.frames = data;
-            this.w = 0;
-            this.h = 0;
         };
 
         drawWH = function (t,ctx,x,y,w,h) {
-            var frameId = 0;
+            let frameId = 0;
             if(!this.loop && this.animated && t >= this.duration){
                 frameId = (this.frames.length - 1);
             }else if(this.animated){
@@ -52,19 +60,19 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 this.frames[frameId].pw,this.frames[frameId].ph,
                 x,y,
                 w,h);
-            this.w = this.frames[frameId].w;
-            this.h = this.frames[frameId].h;
+            this.w = w;
+            this.h = h;
         };
 
         draw = function (t,ctx,x,y){
-            var frameId = 0;
+            let frameId = 0;
             if(!this.loop && this.animated && t >= this.duration){
                 frameId = (this.frames.length - 1);
             }else if(this.animated){
                 t = t % this.duration;
                 var totalD = 0;
 
-                for(var i in this.frames){
+                for(let i in this.frames){
                     totalD += this.frames[i].d;
                     frameId = i;
                     this.frameId = totalD;
@@ -79,10 +87,22 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 this.frames[frameId].px,this.frames[frameId].py,
                 this.frames[frameId].pw,this.frames[frameId].ph,
                 x,y,
-                this.frames[frameId].w,this.frames[frameId].h);
-            this.w = this.frames[frameId].w;
-            this.h = this.frames[frameId].h;
+                this.frames[frameId].pw,this.frames[frameId].ph);
+            this.w = this.frames[frameId].pw;
+            this.h = this.frames[frameId].ph;
         };
+
+        getWidth = function () {
+            let output = 0;
+            this.frames.forEach((val) => {output = val.w > output ? val.w : output;});
+            return output;
+        };
+        getHeight = function () {
+            let output = 0;
+            this.frames.forEach((val) => {output = val.h > output ? val.h : output;});
+            return output;
+        };
+
     };
 
     //Items classes
@@ -100,7 +120,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
         //Use item if possible function
         use = function (user) {
             if(this.action !== null){
-                this.action.call(user);
+                this.action(user);
             }
         };
 
@@ -113,10 +133,8 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
     classes.Weapon = class extends classes.Item{
         constructor(name,sprite,description,cost,meta,action,effects){
             super(name,sprite,description,cost,meta,action,"weapon");
-            this.type = ;
             this.effects = effects;
         };
-
 
     };
 
@@ -125,8 +143,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
     */
     classes.Armor = class extends classes.Item{
         constructor(name,sprite,description,cost,meta,action,effects){
-            super(name,name,sprite,description,cost,meta,action);
-            this.type = "armor";
+            super(name,sprite,description,cost,meta,action,"armor");
             this.effects = effects;
         };
     };
@@ -136,8 +153,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
      */
     classes.Helmet = class extends classes.Item{
         constructor(name,sprite,description,cost,meta,action,effects){
-            super(name,name,sprite,description,cost,meta,action);
-            this.type = "helmet";
+            super(name,sprite,description,cost,meta,action,"helmet");
             this.effects = effects;
         };
     };
@@ -147,8 +163,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
      */
     classes.Ring = class extends classes.Item{
         constructor(name,sprite,description,cost,meta,action,effects){
-            super(name,name,sprite,description,cost,meta,action);
-            this.type = "ring";
+            super(name,sprite,description,cost,meta,action,"ring");
             this.effects = effects;
         };
     };
@@ -158,8 +173,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
      */
     classes.Shield = class extends classes.Item{
         constructor(name,sprite,description,cost,meta,action,effects){
-            super(name,name,sprite,description,cost,meta,action);
-            this.type = "shield";
+            super(name,sprite,description,cost,meta,action,"shield");
             this.effects = effects;
         };
     };
@@ -169,9 +183,8 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
      */
     classes.Ammo = class extends classes.Item{
         constructor(name,sprite,description,cost,meta,action,effects){
-            super(name,name,sprite,description,cost,meta,action);
-            this.type = "ammo";
-            this.meta = maint.isReachable(meta) ? this.meta : {"isStackable": true, "amount": 1}
+            super(name,sprite,description,cost,meta,action,"ammo");
+            this.meta = maint.isReachable(meta) ? this.meta : {"isStackable": true, "amount": 1};
             this.effects = effects;
         };
     };
@@ -255,7 +268,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
         //Main funcs
         render = function(){
             //Drawing the sprite of inventory
-            vars.ctx.drawImage(vars.inventorySprite,this.x,this.y);
+            vars.ctx.drawImage(vars.assets.inventorySprite,this.x,this.y);
 
             //Drawing all inventory items //TODO implement many slots feature
             for(let value of this.slots) {
@@ -264,8 +277,8 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                     //Getting orinal item
                     let origin = itemList.getItem(item.id);
                     //Getting width and height of item
-                    let w = origin.sprite.w;
-                    let h = origin.sprite.h;
+                    let w = origin.sprite.getWidth();
+                    let h = origin.sprite.getHeight();
 
                     //Setting it's width and height if it's bigger
                     w = w > this.w ? this.w : w;
@@ -284,7 +297,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 }
             }
 
-            //Drawing all equipment items //TODO implement equipment
+            //Drawing all equipment items
             for(let index in this.equipment){
                 //Getting item
                 let item = this.getSlot(index).object;
@@ -295,22 +308,22 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                     let origin = itemList.getItem(item.id);
 
                     //Getting width and height of item
-                    let w = origin.sprite.w;
-                    let h = origin.sprite.h;
-
-                    //Getting needed distance to reach center of inventory slot
-                    let tw = w > this.w ? this.w - w + 5 : 0;
-                    let th = h > this.h ? this.h - h + 5 : 0;
+                    let w = origin.sprite.getWidth();
+                    let h = origin.sprite.getHeight();
 
                     //Setting it's width and height if it's bigger
                     w = w > this.w ? this.w : w;
                     h = h > this.h ? this.h : h;
 
                     //Drawing item
-                    if(item === this.chosen.object && vars.events.isMouthWithInv){
-                        origin.sprite.drawWH(vars.gameTime, vars.ctx, item.x, item.y, w, h);
+                    if(item === this.chosen.object && vars.events.isMouseWithInv){
+                        origin.sprite.drawWH(vars.gameTime, vars.ctx, vars.mouseX - w / 2, vars.mouseY - h / 2, w, h);
                     }else {
-                        origin.sprite.drawWH(vars.gameTime, vars.ctx, item.x - tw, item.y - th, w, h);
+                        //Getting needed distance to reach center of inventory slot
+                        let tw = this.w / 2 - w / 2;
+                        let th = this.h / 2 - h / 2;
+
+                        origin.sprite.drawWH(vars.gameTime, vars.ctx, this.equipment[index].x + tw, this.equipment[index].y + th, w, h);
                     }
                 }
 
@@ -330,67 +343,51 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 //Stating stats //TODO make function stateInfo() for items
                 if(origin.type === "weapon"){
                     vars.ctx.font = "12px Arial";
-                    if(origin.weaponType === "melee"){
+                    if(origin.effects.weaponType === "melee"){
                         vars.ctx.fillText(origin.name,this.x + 30,this.y + 314);
-                        vars.ctx.fillText("Has: " + origin.dmg + " damage",this.x + 30,this.y + 326);
-                        vars.ctx.fillText("Has: " + origin.dmgType + " attack",this.x + 30,this.y + 338);
-                        vars.ctx.fillText("It's: " + origin.weaponType + " weapon",this.x + 30,this.y + 350);
+                        vars.ctx.fillText("Has: " + origin.effects.dmg + " damage",this.x + 30,this.y + 326);
+                        vars.ctx.fillText("Has: " + origin.effects.dmgType + " attack",this.x + 30,this.y + 338);
+                        vars.ctx.fillText("It's: " + origin.effects.weaponType + " weapon",this.x + 30,this.y + 350);
                         vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 362);
-                        vars.ctx.fillText("It's attack speed: " + origin.cooldown * 10,this.x + 30,this.y + 374);
-                    }if(origin.weaponType === "ranged"){
+                        vars.ctx.fillText("It's attack speed: " + origin.effects.cooldown * 10,this.x + 30,this.y + 374);
+                    }if(origin.effects.weaponType === "ranged"){
                         vars.ctx.fillText(origin.name,this.x + 30,this.y + 314);
-                        vars.ctx.fillText("Has: " + origin.dmg + " damage",this.x + 30,this.y + 326);
-                        vars.ctx.fillText("Has: " + origin.dmgType + " attack",this.x + 30,this.y + 338);
-                        vars.ctx.fillText("It's: " + origin.weaponType + " weapon",this.x + 30,this.y + 350);
+                        vars.ctx.fillText("Has: " + origin.effects.dmg + " damage",this.x + 30,this.y + 326);
+                        vars.ctx.fillText("Has: " + origin.effects.dmgType + " attack",this.x + 30,this.y + 338);
+                        vars.ctx.fillText("It's: " + origin.effects.weaponType + " weapon",this.x + 30,this.y + 350);
                         vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 362);
-                        vars.ctx.fillText("It's attack speed: " + origin.cooldown * 10,this.x + 30,this.y + 374);
-                    }if(origin.weaponType === "staff"){
+                        vars.ctx.fillText("It's attack speed: " + origin.effects.cooldown * 10,this.x + 30,this.y + 374);
+                    }if(origin.effects.weaponType === "staff"){
                         vars.ctx.fillText(origin.name,this.x + 30,this.y + 314);
                         maint.wrapText(vars.ctx,origin.description,this.x + 30,this.y + 326,150,13);
                     }
                     vars.ctx.font = "15px Arial";
                 }else if(origin.type === "armor"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("Has: " + origin.def + " defence",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("It's: " + origin.type,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("Has: " + origin.effects.def + " defence",this.x + 30,this.y + 335);
                     vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
                 }else if(origin.type === "helmet"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("Has: " + origin.def + " defence",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("It's: " + origin.type,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("Has: " + origin.effects.def + " defence",this.x + 30,this.y + 335);
                     vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
                 }else if(origin.type === "shield"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("It protect from " + origin.def + " points of damage",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("It's: " + origin.type,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It protect from " + origin.effects.def + " points of damage",this.x + 30,this.y + 335);
                     vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
                 }else if(origin.type === "ring"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("It buffs " + origin.buff + " stats",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("It's value: " + origin.buffValue,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("It buffs " + origin.effects.buff + " stats",this.x + 30,this.y + 335);
+                    vars.ctx.fillText("It's value: " + origin.effects.buffValue,this.x + 30,this.y + 350);
                     vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
-                }else if(origin.type === "quest"){
-                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("You need to find \n" + origin.item.name,this.x + 30,this.y + 335);
                 }else if(origin.type === "consumable"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
                     vars.ctx.fillText("When consumed: ",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("" + origin.actions,this.x + 30,this.y + 350);
+                    vars.ctx.fillText("" + origin.effects.actions,this.x + 30,this.y + 350);
                     vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
-                    if(maint.isReachable(origin.type.consumes)){
-                        vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 380);
-                    }
-                }else if(origin.type === "questItem"){
-                    vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("When consumed: ",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("It's quest item",this.x + 30,this.y + 350);
                 }else if(origin.type === "skillBook"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("Use it to learn: ",this.x + 30,this.y + 335);
-                    vars.ctx.fillText(origin.skill.name + "",this.x + 30,this.y + 350);
                 }else if(origin.type === "ammo"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
-                    vars.ctx.fillText("It's ammo: ",this.x + 30,this.y + 335);
                     vars.ctx.fillText("It's amount: " + this.chosen.object.meta.amount,this.x + 30,this.y + 350);
                     //TODO fix arrows
                 }
@@ -432,14 +429,59 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
             if(id1 !== id2){
                 let slot1 = this.getSlot(id1);
                 let slot2 = this.getSlot(id2);
+                let slot1Types = slot1.type.split(","),
+                    slot2Types = slot2.type.split(",");
 
-                if(slot1.type === slot2.type || (slot1.type === "item" || slot2.type === "item")){
-                    slot1.object = [slot2.object,slot2.object = slot1.object][0];
+                let item1Types = maint.isReachable(slot1.object) ? itemList.getItem(slot1.object.id).type.split(",") : [],
+                    item2Types = maint.isReachable(slot2.object) ? itemList.getItem(slot2.object.id).type.split(",") : [];
+
+                let check1 = false,
+                    check2 = false;
+
+                if(maint.isReachable(slot1.object)){
+                    item1Types.forEach((value1) =>{
+                        slot2Types.forEach((value2) => {
+                            check1 = (value1 === value2) || value2 === "item";
+                        });
+                    });
+                }else{
+                    slot1Types.forEach((value1) =>{
+                        slot2Types.forEach((value2) => {
+                            check1 = (value1 === value2) || value2 === "item";
+                        });
+                    });
+                }
+
+                if(maint.isReachable(slot2.object)){
+                    item2Types.forEach((value1) =>{
+                        slot1Types.forEach((value2) => {
+                            check2 = (value1 === value2) || value2 === "item";
+                        });
+                    });
+                }else{
+                    slot2Types.forEach((value1) =>{
+                        slot1Types.forEach((value2) => {
+                            check2 = (value1 === value2) || value2 === "item";
+                        });
+                    });
+                }
+
+
+                //Swapping items if some check is done
+                if(
+                    (check1 && check2) ||
+                    (check1 && !maint.isReachable(slot2.object)) ||
+                    (check2 && !maint.isReachable(slot1.object))
+                ){
+                    slot1.object = [slot2.object, slot2.object = slot1.object][0];
                     //Checking if neither first or second object is chosen
                     this.chosen = (slot1 === this.chosen || slot2 === this.chosen) ? slot1 : this.chosen;
                 }else{
-                    maint.genTextAlert("This " + slot1.object.name + "doesn't fit here","red",vars);
+                    maint.genTextAlert("This " + (maint.isReachable(slot1.object) ? itemList.getItem(slot1.object.id).type : itemList.getItem(slot2.object.id).type) + " doesn't fit here", "red", vars);
                 }
+
+               // }
+
             }
         };
 
@@ -471,12 +513,13 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 //If not found than trying to add item
                 for(let value of this.slots){
                     if(!maint.isReachable(value.object)){
-                        value.object = item;
+                        value.object = {"id": item.id,"x":0,"y":0};
                         return true;
                     }
                 }
 
                 maint.genTextAlert("You don't have place in your inventory","red",vars);
+                return false;
 
         };
 
@@ -532,7 +575,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
 
         //Equipment getters
         getWeapon = function(){
-            return maint.isReachable(this.equipment.weapon) ? itemList.getItem(11) : null; //Getting hands item(yea it's item)
+            return maint.isReachable(this.equipment.weapon) ? itemList.getItem(10) : null; //Getting hands item(yea it's item)
         };
         getArmor = function(){
             return maint.isReachable(this.equipment.armor) ? this.equipment.armor : null;
@@ -641,19 +684,19 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 this.timeFromLastAttack += vars.dt;
                 //Checking, then attacking
                 if(!this.isDead){
-                    if (this.attack === true && this.timeFromLastAttack >= itemList.getItem(this.inventory.getWeapon().id).cooldown) {
+                    if (this.attack === true && this.timeFromLastAttack >= itemList.getItem(this.inventory.getWeapon().id).effects.cooldown) {
                         let temp = false;
                         let playerWeapon = this.inventory.getWeapon();
                         let origin = itemList.getItem(playerWeapon.id);
-                        if(origin.weaponType === "melee"){
-                            if (origin.dmgType === "point") {
+                        if(origin.effects.weaponType === "melee"){
+                            if (origin.effects.dmgType === "point") {
                                 maint.checkPlayerThanPointAttack(vars);
-                            } else if (origin.dmgType === "area") {
+                            } else if (origin.effects.dmgType === "area") {
                                 maint.checkPlayerThanAreaAttack(vars);
                             }
                             this.timeFromLastAttack = 0;
                         }
-                        else if(origin.weaponType === "ranged" && maint.isThereAmmo(this, vars)){
+                        else if(origin.effects.weaponType === "ranged" && maint.isThereAmmo(this, vars)){
                             let x2 = this.x + Math.cos((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // unchanged
                             let y2 = this.y - Math.sin((-45  + (-this.rangedAttackBox) * 45)  * (Math.PI / 180)) * (this.size + 10);    // minus on the Sin
 
@@ -666,7 +709,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                             classes.genProjectile(vars,1,x2,y2,speedX,speedY,false);
                             this.timeFromLastAttack = 0;
                         }
-                        else if(origin.weaponType === "staff"){
+                        else if(origin.effects.weaponType === "staff"){
                             this.timeFromLastAttack = origin.action(this) === true ? 0 : this.timeFromLastAttack;
                         }
                         this.isAttackDrawn = true;
@@ -676,7 +719,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                         if (vars.map.enemies[i].isDead === true) {
                             maint.dropRandom(vars.map.enemies[i],vars);
                             //For quests
-                            var enem = maint.getEnemy(vars.map.enemies[i].id,vars.enemyTypes);
+                            let enem = itemList.getEnemy(vars.map.enemies[i].id);
                             if(maint.isReachable(this[enem.name + "Counter"])){
                                 this[enem.name + "Counter"]++;
                             }
@@ -686,6 +729,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                         }
                     }
                 }
+                this.attack = false;
             }
             /*Buffs, debuffs and other temporary effects*/
             if(this.actions.length > 0){
@@ -722,11 +766,11 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 this.deathTime = vars.lastTime;
                 this.hp = this.maxHp / 4;
 
-                for(let value in this.inventory){
-                    if(maint.isReachable(this.inventory[value].object)){
-                        maint.createInTheWorld(this.x,this.y,this.inventory[value].object.id,vars);
-                        this.inventory[value].isEmpty = true;
-                        this.inventory[value].object = null;
+                for(let value of this.inventory.slots){
+                    if(maint.isReachable(value.object)){
+                        maint.createInTheWorld(this.x,this.y,value.object.id,vars);
+                        value.isEmpty = true;
+                        value.object = null;
                     }
                 }
             }
@@ -788,7 +832,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
             this.lastDest = {};
         };
 
-        update = function(dt,projectileTypes) {
+        update = function(dt) {
             if(maint.isReachable(this.isMovingTowards) && this.isMovingTowards === true){
                 this.x += Math.abs(this.vx) * maint.getVelocityTo(this.lastDest,this).x * dt;
                 this.y += Math.abs(this.vy) * maint.getVelocityTo(this.lastDest,this).y * dt;
@@ -796,8 +840,8 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 this.x += this.vx * dt;
                 this.y += this.vy * dt;
             }
-            if(maint.isReachable(maint.getProjectile(this.id,projectileTypes))){
-                maint.getProjectile(this.id,projectileTypes).action(this);
+            if(maint.isReachable(itemList.getProjectile(this.id))){
+                itemList.getProjectile(this.id).action(this);
             }
             this.living += dt;
 
@@ -810,8 +854,20 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
     };
 
     classes.genProjectile = function(vars,id,x,y,vx,vy,moveTowards,destX,destY){
-        vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(x, y, vx, vy, id, maint.getProjectile(id,vars.projectileTypes).time);
-        if(maint.isReachable(moveTowards) && moveTowards === true && maint.isReachable(destX) && maint.isReachable(destY)){
+        vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(
+            x,
+            y,
+            vx,
+            vy,
+            id,
+            itemList.getProjectile(id).time
+        );
+        if(
+            maint.isReachable(moveTowards) &&
+            moveTowards === true &&
+            maint.isReachable(destX) &&
+            maint.isReachable(destY)
+        ){
             vars.map.delpoyables[vars.map.delpoyables.length - 1].moveTowards(destX,destY);
         }
     };
@@ -839,9 +895,9 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
         };
 
         drawShop = function (vars){
-            vars.ctx.drawImage(vars.shopSprite,this.x,this.y);
-            var count = 0;
-            for(var i = this.pos;i < this.pos + 4;i++){
+            vars.ctx.drawImage(vars.assets.shopSprite,this.x,this.y);
+            let count = 0;
+            for(let i = this.pos;i < this.pos + 4;i++){
                 if(maint.isReachable(this.items[i]) && maint.isReachable(this.items[i].sprite)){
                     if(count === 0){
                         this.items[i].sprite.draw(vars.gameTime,vars.ctx,this.x + 26,this.y + 43);
@@ -849,14 +905,14 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                         vars.ctx.font = "10px Arial";
                         maint.wrapText(vars.ctx,this.items[i].description,this.x + 70,this.y + 60,215,15);
                         maint.wrapText(vars.ctx,this.items[i].cost,this.x + 300,this.y + 60,215,15);
-                        vars.ctx.drawImage(vars.acceptButtonSprite,this.buttons[0].x, this.buttons[0].y);
+                        vars.ctx.drawImage(vars.assets.acceptButtonSprite,this.buttons[0].x, this.buttons[0].y);
 
                     }else{
                         this.items[i].sprite.draw(vars.gameTime,vars.ctx,this.x + 26,this.y + (95 * count) + 43);
                         vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
                         maint.wrapText(vars.ctx,this.items[i].description,this.x + 70,this.y + 90 * count + 70,215,15);
                         maint.wrapText(vars.ctx,this.items[i].cost,this.x + 300,this.y + 100 * count + 50,215,15);
-                        vars.ctx.drawImage(vars.acceptButtonSprite,this.buttons[count].x, this.buttons[count].y);
+                        vars.ctx.drawImage(vars.assets.acceptButtonSprite,this.buttons[count].x, this.buttons[count].y);
                     }
                 }
                 count++;
@@ -882,59 +938,14 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
                 if(vars.events.isLeftMouseReleased && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
                     if(vars.player.money >= this.items[i + this.pos].cost){
 
-                        let isChecked = null;
                         let item = this.items[i + this.pos];
-                        //Checking if player has space in inventory
-                        for(let index in vars.player.inventory){
-                            let value  = vars.player.inventory[index];
 
-                            if(!maint.isReachable(value.object)){
-                                isChecked =  + index;
-                                return true;
-                            }
-                        }
-
-                        if(itemList.getItem(item.id).type !== "ammo" && maint.isReachable(isChecked)){
-                            vars.player.inventory[isChecked].object = {};
-                            vars.player.inventory[isChecked].object.id = item.id;
-                            vars.player.inventory[isChecked].object.x = 0;
-                            vars.player.inventory[isChecked].object.y = 0;
-
-                            //Money operations
+                        let isAdded = vars.player.inventory.addItem(item);
+                        if(isAdded) {
                             vars.player.money -= item.cost;
                             this.keeper.money += item.cost;
-                        }else if(itemList.getItem(item.id).type === "ammo"){
-                            let ir = true;
-                            //Adding amount of arrows to slot with same ammo
-                            for (let u = 0; u < 9; u++) {
-                                if (vars.player.inventory[u].isEmpty === false && maint.isReachable(itemList.getItem(vars.player.inventory[u].object.id).ammoFor) && itemList.getItem(vars.player.inventory[u].object.id).ammoFor === item.ammoFor) {
-                                    vars.player.inventory[u].object.amount += item.meta.amount;
-                                    ir = false;
-                                    break;
-                                }
-                            }
-                            //Adding new item to a new slot
-                            if(ir){
-                                for (let w = 0; w < 9; w++) {
-                                    if (vars.player.inventory[w].isEmpty) {
-                                        vars.player.inventory[w].isEmpty = false;
-                                        vars.player.inventory[w].object = {"inventoryId":w,"id":item.id,"amount":maint.isReachable(item.amount) ? item.amount : null};
-                                        ir = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            vars.player.money -= item.cost;
-                            this.keeper.money += item.cost;
-                        }else{
-                            maint.genTextAlert("Your inventory is full","rgba(255,200,200,1.0)",vars);
-                            break;
                         }
-
-
                         break;
-
-
                     }else{
                         maint.genTextAlert("You can't aford this","rgba(255,200,200,1.0)",vars);
                         break;
@@ -989,7 +1000,7 @@ define(["maintenance","vars","itemList"],function (maint,vars,itemList) {
     //Upgrade stats menu
     classes.UpgradeMenu = class{
         constructor(vars) {
-            this.sprite = new classes.Sprite([{"px":0,"py":0,"pw":vars.upgradeMenuSprite.width,"ph":vars.upgradeMenuSprite.height,"w":vars.upgradeMenuSprite.width,"h":vars.upgradeMenuSprite.height}],vars.upgradeMenuSprite);
+            this.sprite = new classes.Sprite([{"px":0,"py":0,"pw":vars.assets.upgradeMenuSprite.width,"ph":vars.assets.upgradeMenuSprite.height,"w":vars.assets.upgradeMenuSprite.width,"h":vars.assets.upgradeMenuSprite.height}],vars.assets.upgradeMenuSprite);
             this.x = 200;
             this.y = 200;
             this.type = "upgrade";

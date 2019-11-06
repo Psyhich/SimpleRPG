@@ -1,12 +1,12 @@
 define([],function () {
-     var vars = {};
+     let vars = {};
 
     /*Variables*/
     //Main
     vars.canvas;
     vars.ctx = null;
     vars.dt = 0;
-    vars.version = "Alpha 0.21";
+    vars.version = "Alpha 0.22";
     //Debugging
     vars.isDebug = null;
     //Time
@@ -15,12 +15,11 @@ define([],function () {
 
     //For loading
     vars.loaded = 0;
-    vars.shouldLoad = 25;
-    vars.shouldLoad = 25;
+    vars.shouldLoad = 16;
 
     //Event and configuration system
     vars.events = {
-        "isLoaded":true,
+        "isLoaded":false,
         "isShouldMoveEnemies":false,
         "isPaused":false,
         //Menus
@@ -110,55 +109,42 @@ define([],function () {
     vars.lastTime = 0;
 
     //Sprites
-    vars.acceptButtonSprite = null;
-    vars.shopSprite = null;
-    vars.alertSprite = null;
-    vars.inventorySprite = null;
-    vars.playerUISprite = null;
-    vars.playerHotbarSprite = null;
-    vars.skillsMenuSprite = null;
-    vars.upgradeMenuSprite = null;
-    vars.radiosSprite = null;
-    vars.configsSprite = null;
-    vars.menuSprite = null;
+    vars.assets = {
+        //GUI
+        "acceptButtonSprite": null,
+        "shopSprite": null,
+        "alertSprite": null,
+        "inventorySprite": null,
+        "playerUISprite": null,
+        "playerHotbarSprite": null,
+        "upgradeMenuSprite": null,
+        "radiosSprite": null,
+        "configsSprite": null,
+        "menuSprite": null,
 
-
-    //Items and tiles sprite sheets
-    //Items
-    vars.moneySprites = null;
-    vars.shieldsSprite = null;
-    vars.questItemsSprite = null;
-    vars.scrollSprite = null;
-    vars.bowsSprites = null;
-    vars.arrowsSprite = null;
-    vars.staffsSprite = null;
-    vars.bookSprites = null;
-    vars.consumablesSprite = null;
-    vars.swordsSpriteSheet = null;
-    vars.armorSprites = null;
-
-    //Tiles
-    vars.tilesSprite = null;
-
-    //Skill previews
-    vars.skillsSprite = null;
-    //Exp
-    vars.expSprite = null;
+        //Gameplay
+        "skillsMenuSprite": null,
+        "manyItemsSprite": null,
+        "manyItemsSpriteData": null,
+        //Tiles
+        "tilesSprite": null,
+        //Skill previews
+        "skillsSprite": null,
+        //Exp
+        "expSprite": null
+    };
 
     //Splited sprite arrays
-    vars.chestplates = [];
-    vars.helmets = [];
-    vars.swords = [];
-    vars.bows = [];
+    vars.armors = [];
+    vars.weapons = [];
     vars.shields = [];
-    vars.cQuestItems = [];
     vars.consumables = [];
-    vars.money = [];
     vars.arrows = [];
-    vars.staffs = [];
     vars.books = [];
+    vars.money = [];
+    vars.tiles = [];
 
-    //Buttons //TODO implement therm
+    //Buttons //TODO implement and adapt them for phone use
     /*vars.inventoryButtonSprite = null;
     vars.attackButtonSprite = null;
     vars.controllerSprite = null;
@@ -171,11 +157,11 @@ define([],function () {
     //Touch input(not realised) //TODO implement
     vars.touchCache = [];
     //Phone and others input buttons(not realised)
-    vars.inventoryButton = null;
+    /*vars.inventoryButton = null;
     vars.attackButton = null;
     vars.controllerButton = null;
     vars.pauseButton = null;
-    vars.interactButton = null;
+    vars.interactButton = null;*/
 
     //Player
     vars.player = {};

@@ -4,6 +4,8 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
     func.load = function(vars){
         vars.canvas = document.getElementById('canvas');
         vars.ctx = canvas.getContext('2d');
+        itemsList.load();
+
     };
 
     //Run includes create & update & render
@@ -20,6 +22,13 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
     //Create & update & render
     func.create = function(vars,maint){
+        //Main initialise methods
+        itemsList.ini();
+        maint.ini(itemsList);
+        classes.ini(itemsList);
+        window.itemList = itemsList;
+
+
         //Camera
         vars.camera = new classes.Camera(0,0,canvas.width,canvas.height,3200,3200);
 
@@ -30,10 +39,10 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "y":100,
             "isOpen":false,
             "menuOpen":true,
-            "mainSprite": new classes.Sprite([{"px":0,"py":0,"pw":250,"ph":160,"w":250,"h":160}],vars.menuSprite),
-            "configSprite": new classes.Sprite([{"px":0,"py":0,"pw":250,"ph":160,"w":250,"h":160}],vars.configsSprite),
-            "radioOff": new classes.Sprite([{"px":0,"py":0,"pw":21,"ph":21,"w":21,"h":21}],vars.radiosSprite),
-            "radioOn": new classes.Sprite([{"px":0,"py":21,"pw":23,"ph":23,"w":23,"h":23}],vars.radiosSprite),
+            "mainSprite": new classes.Sprite([{"px":0,"py":0,"pw":250,"ph":160,"w":250,"h":160}],vars.assets.menuSprite),
+            "configSprite": new classes.Sprite([{"px":0,"py":0,"pw":250,"ph":160,"w":250,"h":160}],vars.assets.configsSprite),
+            "radioOff": new classes.Sprite([{"px":0,"py":0,"pw":11,"ph":11,"w":21,"h":21}],vars.assets.UIPieces),
+            "radioOn": new classes.Sprite([{"px":13,"py":0,"pw":11,"ph":11,"w":21,"h":21}],vars.assets.UIPieces),
             "render":function () {
                 if(this.isOpen){
                     if(this.menuOpen){
@@ -47,11 +56,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                     }else{
                         this.configSprite.draw(vars.gameTime,vars.ctx,this.x,this.y);
                         maint.wrapText(vars.ctx,"Auto pickup",this.x + 22,this.y + 34,1000,0);
-                        this[vars.config.isAutoPickup ? "radioOn" : "radioOff"].draw(vars.gameTime,vars.ctx,this.x + 150,this.y + 18);
+                        this[vars.config.isAutoPickup ? "radioOn" : "radioOff"].drawWH(vars.gameTime,vars.ctx,this.x + 150,this.y + 18,21,21);
                         maint.wrapText(vars.ctx,"Floating numbers",this.x + 22,this.y + 65,1000,0);
-                        this[vars.config.isFloatingNumbers ? "radioOn" : "radioOff"].draw(vars.gameTime,vars.ctx,this.x + 150,this.y + 48);
+                        this[vars.config.isFloatingNumbers ? "radioOn" : "radioOff"].drawWH(vars.gameTime,vars.ctx,this.x + 150,this.y + 48,21,21);
                         maint.wrapText(vars.ctx,"Alerts",this.x + 22,this.y + 96,1000,0);
-                        this[vars.config.alerts ? "radioOn" : "radioOff"].draw(vars.gameTime,vars.ctx,this.x + 150,this.y + 78);
+                        this[vars.config.alerts ? "radioOn" : "radioOff"].drawWH(vars.gameTime,vars.ctx,this.x + 150,this.y + 78,21,21);
                         maint.wrapText(vars.ctx,"Version: " + vars.version,this.x + 32,this.y + 120,100000,0);
                     }
                 }
@@ -148,11 +157,14 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
         //Creating player skills menu UI
         vars.skillsMenu = {
-            "sprite":new classes.Sprite([{"px":0,"py":0,"pw":vars.skillsMenuSprite.width,
-                "ph":vars.skillsMenuSprite.height,
-                "w":vars.skillsMenuSprite.width,
-                "h":vars.skillsMenuSprite.height
-            }],vars.skillsMenuSprite),
+            "sprite":new classes.Sprite([{
+                "px":0,
+                "py":0,
+                "pw":vars.assets.skillsMenuSprite.width,
+                "ph":vars.assets.skillsMenuSprite.height,
+                "w":vars.assets.skillsMenuSprite.width,
+                "h":vars.assets.skillsMenuSprite.height
+            }],vars.assets.skillsMenuSprite),
             "x":40,
             "y":120,
             "w":480,
@@ -164,7 +176,14 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                     for (let y = 0;y < 3;y++){
                         for(let x = 0;x < 3;x++){
                             if(maint.isReachable(vars.player.skills[((y * 3) + x) + this.pos])){
-                                maint.getSkill(vars.player.skills[((y * 3) + x) + this.pos].id,vars.skillTypes).sprite.drawWH(vars.gameTime,vars.ctx,this.x + (x * 67) + (x === 0 ? 9 : 15),this.y + (y * 67) + (y === 0 ? 9 : 17),60,60);
+                                itemsList.getSkill(vars.player.skills[((y * 3) + x) + this.pos].id).sprite.drawWH(
+                                    vars.gameTime,
+                                    vars.ctx,
+                                    this.x + (x * 67) + (x === 0 ? 9 : 15),
+                                    this.y + (y * 67) + (y === 0 ? 9 : 17),
+                                    60,
+                                    60
+                                );
                             }
                         }
                     }
@@ -210,50 +229,6 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         vars.upgradeMenu = {"isOpened":false,"menu":new classes.UpgradeMenu(vars)};
 
 
-
-
-
-        //Enemy moving functions
-
-        //Creating all typed objects
-
-        //Projectiles
-
-        //Tiles
-
-
-        //Skills
-
-
-        //Enemies
-
-        //Setting ids:
-
-        //For items
-        for(let i = 0; i < vars.itemTypes.length;i++){
-            vars.itemTypes[i].id = i;
-        }
-        //Tiles
-        for(let i = 0; i < itemsList.tileTypes.length;i++){
-            itemsList.tileTypes[i].id = i;
-        }
-        //Enemies
-        for(let i = 0; i < itemsList.enemyTypes.length;i++){
-            itemsList.enemyTypes[i].id = i;
-        }
-        //Projectiles
-        for(let i = 0; i < vars.projectileTypes.length;i++){
-            vars.projectileTypes[i].id = i;
-        }
-        //Skills
-        for(let i = 0; i < itemsList.skillTypes.length;i++){
-            itemsList.skillTypes[i].id = i;
-        }
-        //Staff skills
-        for(let i = 0; i < vars.staffSkills.length;i++){
-            vars.staffSkills[i].id = i;
-        }
-
         //Works if no loaded game
         if(!vars.isLoadedFromSaveGame) {
             //Map
@@ -290,12 +265,6 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         };
 
         /*Making preset items*/
-        vars.sScroll = {
-            "sprite":new classes.Sprite([{"w":32,"h":32, "pw":32,"ph":32,"px":0,"py":0,"x":0,"y":0,}],vars.scrollSprite),
-            "isQuest":true,
-            "type":"quest",
-            "treasure":null
-        };
         vars.sSpawner = {
             "name":"Zombie spawner",
             "x":0,
@@ -308,34 +277,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "id":0,
             "range":300
         };
-        vars.sExp = {
-            "sprite":new classes.Sprite([{"w":32,"h":32,"pw":32,"ph":32,"px":0,"py":0}],vars.expSprite),
-            "x":0,
-            "y":0,
-            "name":"exp",
-            "type":"exp",
-            "count":0,
-            "id":9
-        };
-        vars.sMoney = {
-            "sprite":new classes.Sprite([{"w":32,
-                "h":32,
-                "pw":32,
-                "ph":32,
-                "px":0,
-                "py":0}],vars.money[2].img),
-            "x":0,
-            "y":0,
-            "name":"money",
-            "type":"money",
-            "count":0,
-            "id":10
-        };
 
 
         vars.createRuned = true;
         vars.isDebug = false;
-        maint.createInTheWorld(10,50,vars.itemTypes[7].id,vars);
+        maint.createInTheWorld(10,50,6,vars);
         vars.map.items[0].x = 100;
         vars.map.items[0].y = 200;
         //Players array for NPC
@@ -359,54 +305,9 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "npcType":"quest",
             "hp":250,
             "maxHp":250,
-            "weapon":{
-                "name": "Ronan's sword",
-                "img":vars.swords[5].img,
-                "px":vars.swords[5].px,
-                "py":vars.swords[5].py,
-                "pw":vars.swords[5].pw,
-                "ph":vars.swords[5].ph,
-                "x":20,
-                "y":100,
-                "w":vars.swords[5].pw / 2,
-                "h":vars.swords[5].ph / 2,
-                "type":"weapon",
-                "cooldown":0.2,
-                "dmg":10,
-                "dmgType":"area",
-                "isMelee":true,
-                "cost":100
-            },
-            "armor":{
-                "name": "Knight's Armor",
-                "img":vars.chestplates[3].img,
-                "px":vars.chestplates[3].px,
-                "py":vars.chestplates[3].py,
-                "pw":vars.chestplates[3].pw,
-                "ph":vars.chestplates[3].ph,
-                "x":0,
-                "y":0,
-                "w":vars.chestplates[3].pw,
-                "h":vars.chestplates[3].ph,
-                "def":13,
-                "type":"armor",
-                "cost":200
-            },
-            "helmet":{
-                "name": "Knight's helmet",
-                "img":vars.helmets[4].img,
-                "px":vars.helmets[4].px,
-                "py":vars.helmets[4].py,
-                "pw":vars.helmets[4].pw,
-                "ph":vars.helmets[4].ph,
-                "x":0,
-                "y":0,
-                "w":vars.helmets[4].pw,
-                "h":vars.helmets[4].ph,
-                "def":8,
-                "type":"helmet",
-                "cost":150
-            },
+            "weapon":null,
+            "armor":null,
+            "helmet":null,
             "ring":null,
             "shield":null,
             "attack":false,
@@ -428,54 +329,9 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "shopType":"armor",
             "hp":250,
             "maxHp":250,
-            "weapon":{
-                "name": "Ronan's sword",
-                "img":vars.swords[5].img,
-                "px":vars.swords[5].px,
-                "py":vars.swords[5].py,
-                "pw":vars.swords[5].pw,
-                "ph":vars.swords[5].ph,
-                "x":20,
-                "y":100,
-                "w":vars.swords[5].pw / 2,
-                "h":vars.swords[5].ph / 2,
-                "type":"weapon",
-                "cooldown":0.2,
-                "dmg":10,
-                "dmgType":"area",
-                "isMelee":true,
-                "cost":100
-            },
-            "armor":{
-                "name": "Knight's Armor",
-                "img":vars.chestplates[3].img,
-                "px":vars.chestplates[3].px,
-                "py":vars.chestplates[3].py,
-                "pw":vars.chestplates[3].pw,
-                "ph":vars.chestplates[3].ph,
-                "x":0,
-                "y":0,
-                "w":vars.chestplates[3].pw,
-                "h":vars.chestplates[3].ph,
-                "def":13,
-                "type":"armor",
-                "cost":200
-            },
-            "helmet":{
-                "name": "Knight's helmet",
-                "img":vars.helmets[4].img,
-                "px":vars.helmets[4].px,
-                "py":vars.helmets[4].py,
-                "pw":vars.helmets[4].pw,
-                "ph":vars.helmets[4].ph,
-                "x":0,
-                "y":0,
-                "w":vars.helmets[4].pw,
-                "h":vars.helmets[4].ph,
-                "def":8,
-                "type":"helmet",
-                "cost":150
-            },
+            "weapon": null,
+            "armor": null,
+            "helmet": null,
             "ring":null,
             "shield":null,
             "attack":false,
@@ -484,10 +340,10 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "isDead":false,
             "isInvOpen":false,
             "money":100,
-            "items":[vars.itemTypes[8],vars.itemTypes[0],vars.itemTypes[1],vars.itemTypes[2]]
+            "items":[itemsList.items[8],itemsList.items[0],itemsList.items[1],itemsList.items[2]]
         };
         vars.weaponTrader = jQuery.extend(true,{},vars.sTrader);
-        vars.weaponTrader.items = [vars.itemTypes[5],vars.itemTypes[12],vars.itemTypes[13],vars.itemTypes[14]];
+        vars.weaponTrader.items = [itemsList.items[5],itemsList.items[12],itemsList.items[13],itemsList.items[14]];
         vars.weaponTrader.shopType = "weapon";
         vars.weaponTrader.x = 1300;
 
@@ -544,32 +400,55 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         for(let y = 0;y < vars.map.h;y++){
             for(let x = 0;x < vars.map.w;x++) {
                 if(maint.isTileInRange(vars.map.map[maint.toIndex(x, y, vars.map)],vars.camera,vars.map.tileW,vars.map.tileH)){
-                    itemsList.tileTypes[vars.map.map[maint.toIndex(x, y, vars.map)].id].sprite.draw(vars.gameTime, vars.ctx, x * vars.map.tileW - vars.camera.xView, y * vars.map.tileH - vars.camera.yView);
+                    itemsList.getTile(vars.map.map[maint.toIndex(x, y, vars.map)].id).sprite.drawWH(
+                        vars.gameTime,
+                        vars.ctx,
+                        x * vars.map.tileW - vars.camera.xView,
+                        y * vars.map.tileH - vars.camera.yView,
+                        32,
+                        32
+                    );
                     count++;
                 }
             }
         }
 
-        //Objects
-        for(let i = 0;i < vars.map.objects.length;i++){
+        //Objects //TODO implement
+        /*for(let i = 0;i < vars.map.objects.length;i++){
 
-        }
+        }*/
 
         //Items
         for(let i = 0;i < vars.map.items.length;i++) {
-            if (maint.isReachable(vars.map.items[i]) && maint.isReachable(itemsList.getItem(vars.map.items[i].id)) && itemsList.isItemInRange(vars.map.items[i],itemsList.getItem(vars.map.items[i].id).sprite.w,itemsList.getItem(vars.map.items[i].id).sprite.h,vars.camera)){
+            if (
+                maint.isReachable(vars.map.items[i]) &&
+                maint.isReachable(itemsList.getItem(vars.map.items[i].id))
+            ){
                 //console.log(map.items[i]);
-                itemsList.getItem(vars.map.items[i].id).sprite.draw(vars.gameTime,vars.ctx, vars.map.items[i].x - vars.camera.xView, vars.map.items[i].y - vars.camera.yView/*,map.items[i].sprite.w,map.items[i].sprite.h*/);
+                itemsList.getItem(vars.map.items[i].id).sprite.draw
+                (
+                    vars.gameTime,
+                    vars.ctx,
+                    vars.map.items[i].x - vars.camera.xView,
+                    vars.map.items[i].y - vars.camera.yView
+                );
             }
         }
 
         //Deployables
         for(let i = 0;i < vars.map.delpoyables.length;i++){
             //map.delpoyables[i].sprite.draw(gameTime,map.delpoyables[i].x - camera.xView,map.delpoyables[i].y - camera.yView,map.delpoyables[i].sprite.w,map.delpoyables[i].sprite.h);
-            if(maint.getProjectile(vars.map.delpoyables[i].id,itemsList.projectileTypes).type === "circle"){
-                vars.ctx.fillStyle = maint.getProjectile(vars.map.delpoyables[i].id,itemsList.projectileTypes).color;
+            if(itemsList.getProjectile(vars.map.delpoyables[i].id).type === "circle"){
+                vars.ctx.fillStyle = itemsList.getProjectile(vars.map.delpoyables[i].id).color;
                 vars.ctx.beginPath();
-                vars.ctx.arc(vars.map.delpoyables[i].x - vars.camera.xView,vars.map.delpoyables[i].y - vars.camera.yView,maint.getProjectile(vars.map.delpoyables[i].id,itemsList.projectileTypes).size,0,360,false);
+                vars.ctx.arc(
+                    vars.map.delpoyables[i].x - vars.camera.xView,
+                    vars.map.delpoyables[i].y - vars.camera.yView,
+                    itemsList.getProjectile(vars.map.delpoyables[i].id).size,
+                    0,
+                    360,
+                    false
+                );
                 vars.ctx.closePath();
                 vars.ctx.fill();
             }
@@ -601,9 +480,16 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         jQuery.each(vars.map.enemies,function (index,value) {
             if(value.isDead === false /*&& maint.isEnemInRange(value,vars.camera)*/){
                 vars.ctx.strokeStyle = "rgba(0,0,0,1.0)";
-                vars.ctx.fillStyle = maint.getEnemy(value.id,itemsList.enemyTypes).color;
+                vars.ctx.fillStyle = itemsList.getEnemy(value.id).color;
                 vars.ctx.beginPath();
-                vars.ctx.arc(value.x - vars.camera.xView,value.y - vars.camera.yView,maint.getEnemy(value.id,itemsList.enemyTypes).size,0,360,false);
+                vars.ctx.arc(
+                    value.x - vars.camera.xView,
+                    value.y - vars.camera.yView,
+                    itemsList.getEnemy(value.id).size,
+                    0,
+                    360,
+                    false
+                );
                 vars.ctx.stroke();
                 vars.ctx.fill();
                 vars.ctx.closePath();
@@ -627,14 +513,28 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         //Showing enemy names and health
         jQuery.each(vars.map.enemies,function (index,value) {
             if(Math.sqrt(Math.pow(value.x - vars.player.x,2) + Math.pow(value.y - vars.player.y,2)) <= vars.player.vision){
+                let origin = itemsList.getEnemy(value.id);
                 vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
                 vars.ctx.font = "10px Arial";
                 vars.ctx.beginPath();
-                vars.ctx.fillText(maint.getEnemy(value.id,itemsList.enemyTypes).name,value.x - maint.getEnemy(value.id,itemsList.enemyTypes).size - vars.camera.xView,value.y - maint.getEnemy(value.id,itemsList.enemyTypes).size - 20 - vars.camera.yView);
+                vars.ctx.fillText(
+                    origin.name,
+                    value.x - origin.size - vars.camera.xView,
+                    value.y - origin.size - 20 - vars.camera.yView
+                );
                 vars.ctx.fillStyle = "rgba(155,10,10,1.0)";
-                vars.ctx.fillRect(value.x - maint.getEnemy(value.id,itemsList.enemyTypes).size - 1 - vars.camera.xView,value.y - maint.getEnemy(value.id,itemsList.enemyTypes).size - 15 - vars.camera.yView,maint.getEnemy(value.id,itemsList.enemyTypes).size * 2.2,10);
+                vars.ctx.fillRect(
+                    value.x - origin.size - 1 - vars.camera.xView,
+                    value.y - origin.size - 15 - vars.camera.yView,
+                    origin.size * 2.2,
+                    10
+                );
                 vars.ctx.fillStyle = "rgba(255,10,10,1.0)";
-                vars.ctx.fillRect(value.x - maint.getEnemy(value.id,itemsList.enemyTypes).size - 1 - vars.camera.xView,value.y - maint.getEnemy(value.id,itemsList.enemyTypes).size - 15 - vars.camera.yView,maint.getEnemy(value.id,itemsList.enemyTypes).size * 2.2 * (value.hp / value.maxHp),10);
+                vars.ctx.fillRect(
+                    value.x - origin.size - 1 - vars.camera.xView,
+                    value.y - origin.size - 15 - vars.camera.yView,
+                    origin.size * 2.2 * (value.hp / value.maxHp),
+                    10);
                 vars.ctx.closePath();
             }
         });
@@ -736,7 +636,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         }
 
         //Drawing player options UI
-        vars.ctx.drawImage(vars.playerUISprite,10,5);
+        vars.ctx.drawImage(vars.assets.playerUISprite,10,5);
 
 
         //Drawing health bar
@@ -762,10 +662,17 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         vars.ctx.fill();
 
         //Draw player hotbar
-        vars.ctx.drawImage(vars.playerHotbarSprite,vars.playerHotbar.x,vars.playerHotbar.y);
+        vars.ctx.drawImage(vars.assets.playerHotbarSprite,vars.playerHotbar.x,vars.playerHotbar.y);
         for(let i = 0;i < 6;i++){
             if(maint.isReachable(vars.player.hotbar.items[i]) && i < 6) {
-                maint.getSkill(vars.player.hotbar.items[i].id,itemsList.skillTypes).sprite.drawWH(vars.gameTime,vars.ctx,vars.playerHotbar.x + i * 54 + 21, vars.playerHotbar.y + 4, 41, 41);
+                itemsList.getSkill(vars.player.hotbar.items[i].id).sprite.drawWH(
+                    vars.gameTime,
+                    vars.ctx,
+                    vars.playerHotbar.x + i * 54 + 21,
+                    vars.playerHotbar.y + 4,
+                    41,
+                    41
+                );
             }
         }
 
@@ -882,11 +789,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
                     if (maint.isReachable(value) && (maint.isReachable(itemsList.getItem(value.id).sprite)) && maint.isItemInRange(value, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h, vars.camera) && maint.circleToRectIntersection(vars.player.x, vars.player.y, vars.player.size, value.x, value.y, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h)) {
                         if (itemsList.getItem(value.id).type === "exp") {
-                            vars.player.exp += value.count;
+                            vars.player.exp += value.meta.count;
                             vars.map.items.splice(index, 1);
                             index--;
                         } else if (itemsList.getItem(value.id).type === "money") {
-                            vars.player.money += value.count;
+                            vars.player.money += value.meta.count;
                             vars.map.items.splice(index, 1);
                             index--;
                         }else {
@@ -910,7 +817,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                 value.y += value.vy * dt;
             }
 
-            if(maint.isReachable(maint.getProjectile(value.id,itemsList.projectileTypes).action)){
+            if(maint.isReachable(itemsList.getProjectile(value.id).action)){
                 itemsList.projectileTypes[value.id].action(value);
             }
             value.living += dt;
@@ -1002,10 +909,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         //Enemy moving and collision with player
         jQuery.each(vars.map.enemies,function (index,value) {
             //value.move(dt);
-            maint.getEnemy(value.id,itemsList.enemyTypes).move(dt,value);
+            let origin = itemsList.getEnemy(value.id);
+            origin.move(dt,value);
 
 
-            if(maint.cirToCirCol(value.x,value.y,maint.getEnemy(value.id,itemsList.enemyTypes).size,vars.player.x,vars.player.y,vars.player.size)){
+            if(maint.cirToCirCol(value.x,value.y,origin.size,vars.player.x,vars.player.y,vars.player.size)){
                 let midpoint = {"x":0,"y":0};
                 let dist;
 
@@ -1014,8 +922,8 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                 midpoint.x = (value.x + vars.player.x) / 2;
                 midpoint.y = (value.y + vars.player.y) / 2;
 
-                value.x = midpoint.x + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.x - vars.player.x) / dist;
-                value.y = midpoint.y + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.y - vars.player.y) / dist;
+                value.x = midpoint.x + origin.size * (value.x - vars.player.x) / dist;
+                value.y = midpoint.y + origin.size * (value.y - vars.player.y) / dist;
 
 
             }
@@ -1030,11 +938,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                     midpoint.x = (value.x + value2.x) / 2;
                     midpoint.y = (value.y + value2.y) / 2;
 
-                    value.x = midpoint.x + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.x - value2.x) / dist;
-                    value.y = midpoint.y + maint.getEnemy(value.id,itemsList.enemyTypes).size * (value.y - value2.y) / dist;
+                    value.x = midpoint.x + origin.size * (value.x - value2.x) / dist;
+                    value.y = midpoint.y + origin.size * (value.y - value2.y) / dist;
 
-                    value2.x = midpoint.x + maint.getEnemy(value2.id,itemsList.enemyTypes).size * (value2.x - value.x) / dist;
-                    value2.y = midpoint.y + maint.getEnemy(value2.id,itemsList.enemyTypes).size * (value2.y - value.y) / dist;
+                    value2.x = midpoint.x + origin.size * (value2.x - value.x) / dist;
+                    value2.y = midpoint.y + origin.size * (value2.y - value.y) / dist;
                 }
             }
 
@@ -1044,7 +952,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         if(vars.player.isDead === false) {
             jQuery.each(vars.map.enemies, function (index, value) {
                 value.timeFromLastAttack += dt;
-                let enemyT = maint.getEnemy(value.id,itemsList.enemyTypes);
+                let enemyT = itemsList.getEnemy(value.id);
                 if(value.timeFromLastAttack >= enemyT.cooldown && (Math.sqrt(Math.pow(vars.player.x - value.x, 2) + Math.pow(vars.player.y - value.y, 2)) <= enemyT.range)){
                 if (maint.circleToRectIntersection(value.x, value.y, enemyT.size, vars.playerAttackBox.x, vars.playerAttackBox.y, vars.playerAttackBox.w, vars.playerAttackBox.h)) {
                         if (enemyT.dmg * 10 < maint.getFullDef(vars.player,vars)) {
@@ -1105,14 +1013,14 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             //Searching for pulled with mouse inventory or player equipment and shop interaction
             for(let index in vars.player.inventory.slots){
                 index = parseInt(index);
-                let value = vars.player.inventory.getSlot(index);
+                let value = vars.player.inventory.getSlot(parseInt(index));
                 //Checking if mouse pos is on some slot
                 if(
                     maint.isReachable(value.object) &&
                     (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w &&
                     (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.h))
                 ){
-                    let originalItem = itemsList.getItem(value.object);
+                    let originalItem = itemsList.getItem(value.object.id);
                     if(vars.events.isLeftMousePressed && !vars.events.isMouseWithInv){
                         vars.player.inventory.chosen = value;
                         vars.events.isMouseWithInv = true;
@@ -1142,12 +1050,12 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                 for(let index in vars.player.inventory.equipment){
                     let value = vars.player.inventory.equipment[index];
                     if(maint.isReachable(value.object) &&
-                        (vars.mouseX > value.object.x && vars.mouseX < value.object.x + itemsList.getItem(value.object.id).sprite.w) &&
-                        (vars.mouseY > value.object.y &&
-                            vars.mouseY < value.object.y + itemsList.getItem(value.object.id).sprite.h)
-                        && vars.events.isMouseWithInv === false && vars.events.isLeftMousePressed === true
+                        (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w) &&
+                        (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.w) &&
+                        vars.events.isMouseWithInv === false &&
+                        vars.events.isLeftMousePressed === true
                     ){
-                        vars.player.inventory.chosen = value.object;
+                        vars.player.inventory.chosen = value;
                         vars.events.isMouseWithInv = true;
                         break
                     }
@@ -1181,7 +1089,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                         }
                         if(isChecked === false){
                             for(let index in vars.player.inventory.equipment){
-                                let value = vars.player.inventory.equipment;
+                                let value = vars.player.inventory.equipment[index];
 
                                 if(
                                     (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w) &&
@@ -1256,9 +1164,9 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                     } /*Checking if item is book for learning skills and applying learn function*/else if (
                         maint.isReachable(vars.player.inventory.chosen) &&
                         itemsList.getItem(vars.player.inventory.chosen.object.id).type === "skillBook" &&
-                        maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).train(vars.player))
+                        maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).use(vars.player))
                     ){
-                        itemsList.getItem(vars.player.inventory.chosen.object.id).train(player);
+                        itemsList.getItem(vars.player.inventory.chosen.object.id).use(vars.player);
                     }
                 }
 
@@ -1300,8 +1208,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
         //Checking for using active item in hotbar
         if(maint.isReachable(vars.player.hotbar.activeId) && maint.isReachable(vars.player.hotbar.items[vars.player.hotbar.activeId])){
-            if(vars.player.hotbar.items[vars.player.hotbar.activeId].type === "skill" && maint.isReachable(maint.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id,itemsList.skillTypes).use)){
-                maint.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id,itemsList.skillTypes).use(vars.player);
+            if(
+                vars.player.hotbar.items[vars.player.hotbar.activeId].type === "skill" &&
+                maint.isReachable(itemsList.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id).use)
+            ){
+                itemsList.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id).use(vars.player);
             }
         }
 

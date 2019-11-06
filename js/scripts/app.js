@@ -1,25 +1,20 @@
 define(["main","maintenance","classes","vars","jquery"],function (main, maint, classes, vars,jquery) {
     jquery(function () {
-        var variables = vars;
-        var jQuery = jquery;
-        var mainMeth = main;
-        var maintMeth = maint;
-        var allClasses = classes;
+        let variables = vars;
+        let jQuery = jquery;
+        let mainMeth = main;
+        let maintMeth = maint;
+        let allClasses = classes;
+
         mainMeth.load(vars);
 
+        window.vars = vars;
+
         var checkExis = setInterval(function() {
-            if (vars.isLoaded) {
+            if (vars.events.isLoaded) {
                 console.log("Exists!");
                 clearInterval(checkExis);
 
-
-                if (!variables.isPhone) {
-                    canvas.addEventListener('mousemove', function (e) {
-                        var v2 = maintMeth.getMousePos(e, variables);
-                        variables.mouseX = v2.x;
-                        variables.mouseY = v2.y;
-                    });
-                }
                 canvas.onmousewheel = function (e) {
                     variables.events.deltaY = e.deltaY;
                 };
@@ -138,6 +133,12 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
                         vars.events.keys.isEscReleased = true;
                     }
                 });
+                canvas.addEventListener('mousemove', function (e) {
+                    let v2 = maintMeth.getMousePos(e, variables);
+                    variables.mouseX = v2.x;
+                    variables.mouseY = v2.y;
+                });
+
 
                 //Assigning global variables for debug
                 window.vars = variables;
