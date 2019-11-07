@@ -88,6 +88,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
             "UIPieces",
             "configsSprite",
             "menuSprite",
+            "hotbarChosenSprite"
         ],function () {
             vars.loaded = vars.loaded + 15;
         },vars);
@@ -159,12 +160,18 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                 vars.books[i] = itemArea[i + 406];
             }
 
+            //Creating skills array
+            for(let i = 280; i <= 405;i++){
+                vars.skills[i - 280] = itemArea[i];
+            }
+
             //Creating tiles array
             itemArea = maint.makeSpriteSheetArray(4,5,vars.assets.tilesSprite);
             for(let i = 0; i < itemArea.length;i++){
                 vars.tiles[i] = itemArea[i];
             }
 
+            vars.assets.hotbarChosenSprite = new classes.Sprite([{"px": 0, "py": 0, "pw": 48, "ph": 48, "w": 48, "h": 48}],vars.assets.hotbarChosenSprite)
 
             this.staffSkills = [
                 new classes.Skill(
@@ -173,12 +180,70 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     0.5,
                     function (user) {
                         if (vars.events.isLeftMouseReleased === true) {
-                            classes.genProjectile(vars, 0, user.x, user.y, 100, 100, true, vars.mouseX + vars.camera.xView, vars.mouseY + vars.camera.yView, true, vars.mouseX, vars.mouseY);
+                            classes.genProjectile(
+                                vars,
+                                0,
+                                user.x,
+                                user.y,
+                                100,
+                                100,
+                                true,
+                                vars.mouseX + vars.camera.xView,
+                                vars.mouseY + vars.camera.yView,
+                                true,
+                                vars.mouseX,
+                                vars.mouseY
+                            );
                             return true;
                         }
-
                     },
                     new classes.Sprite([{"px": 46, "py": 0, "pw": 46, "ph": 46, "w": 67, "h": 67}], vars.skillsSprite))
+            ];
+
+            this.skillTypes = [
+                new classes.Skill(
+                    "Firebolt",
+                    "Fires a firebolt in your mouse pos.Cost 5 mana",
+                    0.5,
+                    (user) => {
+                        if (vars.events.isLeftMouseReleased === true) {
+                        if (
+                            outLists.skillTypes[0].lastUsed + outLists.skillTypes[0].cooldown * 1000 < vars.lastTime &&
+                            user.mana - 5 >= 0
+                        ) {
+                            classes.genProjectile(
+                                vars,
+                                0,
+                                user.x,
+                                user.y,
+                                50,
+                                50,
+                                true,
+                                vars.mouseX + vars.camera.xView,
+                                vars.mouseY + vars.camera.yView
+                            );
+                            user.mana -= 5;
+                        } else {
+                            if (outLists.skillTypes[0].lastUsed + outLists.skillTypes[0].cooldown * 1000 < vars.lastTime) {
+                                maint.genTextAlert("Wait some time to use this ability again", "rgba(200,0,0,1.0)", vars);
+                            }
+                            if (user.mana - 5 >= 0) {
+                                maint.genTextAlert("You don't have enough mana", "rgba(200,0,0,1.0)", vars);
+                            }
+                        }
+                        this.lastUsed = vars.lastTime;
+                    }
+                    },
+                    (user) =>{
+                        if(user.magicSkill >= 1){
+                            return true;
+                        }else{
+                            maint.genTextAlert("Your magic skill is too low", "rgba(255,200,200,1.0)", vars);
+                            return false;
+                        }
+                    },
+                    choseSprite("skills",4)
+                )
             ];
 
             this.items = [
@@ -254,15 +319,15 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     null,
                     function (user) {
                         if (maint.isReachable(user.magicSkill) && user.magicSkill >= 1) {
-                            if (this.skill.learn(user)) {
-                                user.skills[user.skills.length] = this.skill;
-                                maint.genTextAlert("Learned firebolt", "rgba(255,200,200,1.0)", vars);
+                            if (this.effects.skillToLearn.learn(user)) {
+
                             }
-                        } else {
-                            maint.genTextAlert("Your magic skill is too low", "rgba(255,200,200,1.0)", vars);
                         }
                     },
-                    "skillBook"
+                    "skillBook",
+                    {
+                        "skillToLearn": outLists.skillTypes[0]
+                    }
                 ),
                 new classes.Armor(
                     "Chainmall armor",
@@ -350,7 +415,15 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                 {
                     "action": function (delp) {
                         jQuery.each(vars.map.enemies, function (index, value) {
-                            if (maint.cirToCirCol(delp.x, delp.y, maint.getProjectile(delp.id, vars.projectileTypes).size, value.x, value.y, maint.getEnemy(value.id, vars.enemyTypes).size)) {
+                            if (
+                                maint.cirToCirCol(
+                                    delp.x,
+                                    delp.y,
+                                    outLists.getProjectile(delp.id, vars.projectileTypes).size,
+                                    value.x,
+                                    value.y,
+                                    outLists.getEnemy(value.id, vars.enemyTypes).size)
+                            ) {
                                 value.hp -= 10;
                                 if (value.hp <= 0) {
                                     value.isDead = true;
@@ -362,7 +435,8 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     },
                     "type": "circle",
                     "size": 10,
-                    "time": 5
+                    "time": 5,
+                    "color": "rgba(0,255,0,1.0)"
                 },
                 {
                     "action": function (delp) {
@@ -573,42 +647,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                 },
             ];
 
-            this.skillTypes = [
-                new classes.Skill("Firebolt", "Fires a firebolt in your mouse pos.Cost 5 mana", 0.5, function (user) {
-                    if (vars.events.isLeftMouseReleased === true) {
-                        if (this.lastUsed + this.cooldown * 1000 < vars.lastTime && user.mana - 5 >= 0) {
-                            /*var v = {"x":vars.mouseX + vars.camera.xView,"y":vars.mouseY + vars.camera.yView};
-                            vars.map.delpoyables[vars.map.delpoyables.length] = new classes.Delpoyable(user.x,user.y,maint.getVelocityTo(v,user).x * 50,maint.getVelocityTo(v,user).y * 50,null,"circle",5,10,function () {
-                                var temp = false;
-                                var delp = this;
-                                jQuery.each(vars.map.enemies,function (index,value) {
-                                    if(maint.cirToCirCol(delp.x,delp.y,delp.size,value.x,value.y,value.size)){
-                                        value.hp -= 10;
-                                        if(value.hp <= 0){value.isDead = true;}
-                                        temp = true;
-                                        return false;
-                                    }
-                                });
-                                if (temp){
-                                    this.living = this.time;
-                                }
-                            });
-                            vars.map.delpoyables[vars.map.delpoyables.length - 1].moveTowards(vars.mouseX + vars.camera.xView,vars.mouseY + vars.camera.yView);*/
-                            classes.genProjectile(vars, 0, user.x, user.y, 50, 50, true, vars.mouseX + vars.camera.xView, vars.mouseY + vars.camera.yView);
-                            user.mana -= 5;
-                        } else {
-                            if (this.lastUsed + this.cooldown * 1000 < vars.lastTime) {
-                                maint.genTextAlert("Wait some time to use this ability again", "rgba(200,0,0,1.0)", vars);
-                            }
-                            if (user.mana - 5 >= 0) {
-                                maint.genTextAlert("You don't have enough mana", "rgba(200,0,0,1.0)", vars);
-                            }
-                        }
-                        this.lastUsed = vars.lastTime;
-                    }
 
-                }, new classes.Sprite([{"px": 46, "py": 0, "pw": 46, "ph": 46, "w": 67, "h": 67}], vars.skillsSprite))
-            ];
 
             this.enemyTypes = [
                 /*0*/{

@@ -10,7 +10,7 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
 
         window.vars = vars;
 
-        var checkExis = setInterval(function() {
+        let checkExis = setInterval(function() {
             if (vars.events.isLoaded) {
                 console.log("Exists!");
                 clearInterval(checkExis);
@@ -56,12 +56,8 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
                     }
 
                     //Numbers check
-                    for(let numberToUse = 0; numberToUse < 10;numberToUse++){
-                        if(e.keyCode - 48 === numberToUse && !vars.events.keys.isNumLockUsed){
-                            vars.events.keys["is" + numberToUse + "Pressed"] = true;
-                        }else if(e.keyCode - 96 === numberToUse && vars.events.keys.isNumLockUsed){
-                            vars.events.keys["is" + numberToUse + "Pressed"] = true;
-                        }
+                    if(e.keyCode >= 48 && e.keyCode <= 57){
+                        vars.events.keys["is" + (e.keyCode - 48) + "Pressed"] = true;
                     }
                     //Escape check
                     if (e.keyCode === 27) {
@@ -118,16 +114,12 @@ define(["main","maintenance","classes","vars","jquery"],function (main, maint, c
                     }
 
                     //Numbers check
-                    for(let numberToUse = 0; numberToUse < 10;numberToUse++){
-                        if(e.keyCode - 48 === numberToUse && !vars.events.keys.isNumLockUsed){
-                            vars.events.keys["is" + numberToUse + "Released"] = true;
-                            vars.events.keys["is" + numberToUse + "Pressed"] = false;
-                        }else if(e.keyCode - 96 === numberToUse && vars.events.keys.isNumLockUsed){
-                            vars.events.keys["is" + numberToUse + "Released"] = true;
-                            vars.events.keys["is" + numberToUse + "Pressed"] = false;
-                        }
+                    if(e.keyCode >= 48 && e.keyCode <= 57){
+                        vars.events.keys["is" + (e.keyCode - 48) + "Pressed"] = false;
+                        vars.events.keys["is" + (e.keyCode - 48) + "Released"] = true;
                     }
 
+                    //Escape check
                     if (e.keyCode === 27) {
                         vars.events.keys.isEscPressed = false;
                         vars.events.keys.isEscReleased = true;

@@ -107,7 +107,7 @@ define(["maintenance","vars"],function (maint,vars) {
 
     //Items classes
     classes.Item = class{
-        constructor(name, sprite, description, cost, meta, action, type){
+        constructor(name, sprite, description, cost, meta, action, type, effects){
             this.name = name;
             this.sprite = sprite;
             this.description = description;
@@ -115,6 +115,7 @@ define(["maintenance","vars"],function (maint,vars) {
             this.meta = maint.isReachable(meta) ? meta : null;
             this.action = maint.isReachable(action) ? action : null;
             this.type = maint.isReachable(type) ? type :"item";
+            this.effects = maint.isReachable(effects) ? effects : undefined;
         };
 
         //Use item if possible function
@@ -191,10 +192,19 @@ define(["maintenance","vars"],function (maint,vars) {
 
     //Skill
     classes.Skill = class{
-        constructor(name,description,cooldown,func,sprite) {
+        /**
+         *   @param name
+         *   @param description
+         *   @param cooldown
+         *   @param action: is for checking before and action of this skill
+         *   @param learnChecker: is for checking if user is valid for learning this skill input function should be with only argument (user)
+         *   @param sprite
+         * */
+        constructor(name,description,cooldown,action,learnChecker,sprite) {
             this.name = name;
             this.description = description;
-            this.action = func;
+            this.action = action;
+            this.learnChecker = learnChecker;
             this.sprite = sprite;
             this.cooldown = cooldown;
             this.lastUsed = 0;
@@ -206,21 +216,30 @@ define(["maintenance","vars"],function (maint,vars) {
         };
 
         learn = function(user) {
-            var a = false;
+            let isAvailableToLearn = false;
+            //Checking for duplicates
             if(user.skills.length > 0){
-                jQuery.each(user.skills,function (index,value) {
+                for(let value of user.skills){
                     if(value === this){
                         maint.genTextAlert("You already learned that skill.","rgba(255,100,100,1.0)",vars);
-                        a = false;
+                        isAvailableToLearn = false;
                         return false;
                     }else if(value !== this){
-                        a = true;
+                        isAvailableToLearn = true;
                     }
-                });
+                }
             }else{
-                a = true;
+                isAvailableToLearn = true;
             }
-            return a;
+            if(isAvailableToLearn){
+                //Using this object method to check if user is valid to learn
+                if(this.learnChecker(user)){
+                    user.skills[user.skills.length] = this;
+                    maint.genTextAlert("Learned: " + this.name, "rgba(255,200,200,1.0)", vars);
+                }
+
+            }
+            return isAvailableToLearn;
         };
     };
 
@@ -751,7 +770,7 @@ define(["maintenance","vars"],function (maint,vars) {
             }
             //Checking if player mana changed and regenerating it after 4 seconds
             if(this.lastMana === this.mana){
-                if(this.lastManaLoose + 4000 < vars.lastTime){
+                if(this.lastManaInjury + 4000 < vars.lastTime){
                     maint.restoreMana(this,0.2);
                 }
             }else {

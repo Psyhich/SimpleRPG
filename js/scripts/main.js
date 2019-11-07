@@ -206,12 +206,12 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
                     }
                 }
-                var count = 0;
-                for (var y = 0;y < 3;y++){
-                    for(var x = 0;x < 3;x++){
+                let count = 0;
+                for (let y = 0;y < 3;y++){
+                    for(let x = 0;x < 3;x++){
                         if(vars.mouseX > this.x + x * 67 + 14 && this.x + x * 67 + 81 > vars.mouseX && vars.mouseY > this.y + y * 67 + 14 && this.x + y * 67 + 81 > vars.mouseX){
-                            if(maint.isReachable(vars.player.skills[count]) && maint.isReachable(maint.getClickedNumber(vars.numbers,vars))){
-                                vars.player.hotbar.items[maint.getClickedNumber(vars.numbers,vars) - 1] = vars.player.skills[((y * 3) + x) + this.pos];
+                            if(maint.isReachable(vars.player.skills[count]) && maint.isReachable(maint.getReleasedNumber(vars))){
+                                vars.player.hotbar.items[maint.getReleasedNumber(vars) - 1] = vars.player.skills[((y * 3) + x) + this.pos];
                             }if(maint.isReachable(vars.player.skills[count]) && vars.events.isLeftMouseReleased){
                                 this.chosen = vars.player.skills[((y * 3) + x) + this.pos];
                             }
@@ -630,7 +630,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         }
 
         //Drawing skills menu
-        if(vars.events.isSkillsOpen === true){
+        if(vars.events.isSkillsOpen){
             vars.skillsMenu.sprite.draw(vars.gameTime,vars.ctx,vars.skillsMenu.x,vars.skillsMenu.y);
             vars.skillsMenu.drawSkills();
         }
@@ -680,10 +680,20 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         //Drawing hotkeys
         vars.ctx.font = "15px Arial";
         vars.ctx.fillStyle = "rgba(255,255,255,1.0)";
-        vars.ctx.fillText("1",55 + vars.playerHotbar.x,44 + vars.playerHotbar.y);
+        //vars.ctx.fillText("1",55 + vars.playerHotbar.x,44 + vars.playerHotbar.y);
 
-        for(let i = 1;i < 6;i++){
+        for(let i = 0;i < 6;i++){
             vars.ctx.fillText("" + (i + 1),vars.playerHotbar.x + 53 * (i + 1),vars.playerHotbar.y + 44);
+            if(i === vars.player.hotbar.activeId){
+                vars.assets.hotbarChosenSprite.drawWH(
+                    vars.gameTime,
+                    vars.ctx,
+                    vars.playerHotbar.x + 53 * (i + 1),
+                    vars.playerHotbar.y,
+                    16,
+                    16
+                )
+            }
         }
 
         //Drawing menus
@@ -1199,20 +1209,22 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         }
 
         //Checking for choosing items in hotbar
-        if(maint.isReachable(maint.getClickedNumber(vars.numbers,vars)) && maint.getClickedNumber(vars.numbers,vars) > 0 && maint.getClickedNumber(vars.numbers,vars) < 7){
-            if(maint.isReachable(maint.getClickedNumber(vars.numbers,vars)) && maint.getClickedNumber(vars.numbers,vars) === vars.player.hotbar.activeId){
+        let releasedNumber = maint.getReleasedNumber(vars);
+
+        if(maint.isReachable(releasedNumber) && releasedNumber >= 0 && releasedNumber < 7){
+            if(releasedNumber - 1 === vars.player.hotbar.activeId || releasedNumber === 0){
                 vars.player.hotbar.activeId = null;
-            }
-            vars.player.hotbar.activeId = maint.getClickedNumber(vars.numbers,vars) - 1;
+            }else{vars.player.hotbar.activeId = releasedNumber - 1;}
         }
 
         //Checking for using active item in hotbar
         if(maint.isReachable(vars.player.hotbar.activeId) && maint.isReachable(vars.player.hotbar.items[vars.player.hotbar.activeId])){
+            let itemInHotbar = vars.player.hotbar.items[vars.player.hotbar.activeId];
             if(
                 vars.player.hotbar.items[vars.player.hotbar.activeId].type === "skill" &&
-                maint.isReachable(itemsList.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id).use)
+                maint.isReachable(itemsList.getSkill(itemInHotbar.id).use)
             ){
-                itemsList.getSkill(vars.player.hotbar.items[vars.player.hotbar.activeId].id).use(vars.player);
+                itemsList.getSkill(itemInHotbar.id).use(vars.player);
             }
         }
 

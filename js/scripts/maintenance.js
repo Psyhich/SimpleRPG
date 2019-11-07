@@ -145,15 +145,21 @@ define([],function () {
     };
 
     //Input
-    maint.getClickedNumber = function(numbers,vars) {
+    maint.getReleasedNumber = function(vars) {
         for(let numberToUse = 0;numberToUse < 10;numberToUse++){
             if (vars.events.keys["is" + numberToUse + "Released"]){
                 return numberToUse;
             }
         }
+        return null;
     };
 
-
+    /**
+     *
+     *   @param rows rows
+     *   @param cols
+     *   @param img
+     * */
     maint.makeSpriteSheetArray = function(rows, cols, img) {
         let buffMass = [];
         let h = img.height;

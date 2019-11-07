@@ -6,7 +6,7 @@ define([],function () {
     vars.canvas;
     vars.ctx = null;
     vars.dt = 0;
-    vars.version = "Alpha 0.22";
+    vars.version = "Alpha 0.23";
     //Debugging
     vars.isDebug = null;
     //Time
@@ -143,6 +143,7 @@ define([],function () {
     vars.books = [];
     vars.money = [];
     vars.tiles = [];
+    vars.skills = [];
 
     //Buttons //TODO implement and adapt them for phone use
     /*vars.inventoryButtonSprite = null;
