@@ -1124,27 +1124,26 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
             //Checking if some interaction buttons pressed(works only when there is a chosen item)
             if(maint.isReachable(vars.player.inventory.chosen)) {
+                let inventoryChosen = vars.player.inventory.chosen;
                 //Checking if drop button clicked
                 if (
                     vars.events.isLeftMouseReleased &&
                     ((vars.mouseX > vars.player.inventory.x + 216 && vars.mouseX < vars.player.inventory.x + 216 + 63) &&
                         (vars.mouseY > vars.player.inventory.y + 345 && vars.mouseY < vars.player.inventory.y + 345 + 30))
                 ) {
-                    if (maint.isReachable(vars.player.inventory.chosen)) {
-                        vars.isChecked = false;
-                        //By mathimethic(lul) getting cords for dropped item
-                        let x2 = vars.player.x + Math.cos((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
-                        let y2 = vars.player.y - Math.sin((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
-                        let item = {
-                            "w": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.w,
-                            "h": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.h
-                        };
-                        //Creating("dropping item")
-                        maint.createInTheWorld(x2 - item.w / 1.8, y2 - item.h / 1.8, vars.player.inventory.chosen.object.id, vars, {"amount": vars.player.inventory.chosen.object.amount});
+                    vars.isChecked = false;
+                    //By mathimethic(lul) getting cords for dropped item
+                    let x2 = vars.player.x + Math.cos((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
+                    let y2 = vars.player.y - Math.sin((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
+                    let item = {
+                        "w": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.w,
+                        "h": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.h
+                    };
+                    //Creating("dropping item")
+                    maint.createInTheWorld(x2 - item.w / 1.8, y2 - item.h / 1.8, inventoryChosen.object.id, vars, {"amount": inventoryChosen.object.amount});
 
-                        //Removing it from inventory
-                        vars.player.inventory.removeItem(vars.player.inventory.chosen.inventoryID);
-                    }
+                    //Removing it from inventory
+                    vars.player.inventory.removeItem(inventoryChosen.inventoryID);
                 }
 
                 //Checking if use button clicked
@@ -1153,30 +1152,18 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                     (vars.mouseX > vars.player.inventory.x + 216 && vars.mouseX < vars.player.inventory.x + 216 + 63 &&
                         vars.mouseY > vars.player.inventory.y + 312 && vars.mouseY < vars.player.inventory.y + 312 + 30)
                 ) {
-                    //Checking if item is consumable and if it have one time actions or duration effect
-                    if (maint.isReachable(vars.player.inventory.chosen) &&
-                        itemsList.getItem(vars.player.inventory.chosen.object.id).type === "consumable" &&
+                    if(
                         maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).action)
-                    ) {
-                        let originalItem = itemsList.getItem(vars.player.chosen.object.id);
-                        if (
-                            originalItem.isTemp === true) {
-                            vars.player.actions[vars.player.actions.length] = {
-                                "action": originalItem.action,
-                                "time": originalItem.time,
-                                "deployed": vars.lastTime
-                            };
-                        } else {
-                            originalItem.action(vars.player);
-                        }
-                        //Removing item
-                        vars.player.inventory.removeItem(vars.player,inventory.chosen.inventoryID);
-                    } /*Checking if item is book for learning skills and applying learn function*/else if (
-                        maint.isReachable(vars.player.inventory.chosen) &&
-                        itemsList.getItem(vars.player.inventory.chosen.object.id).type === "skillBook" &&
-                        maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).use(vars.player))
                     ){
-                        itemsList.getItem(vars.player.inventory.chosen.object.id).use(vars.player);
+                        itemsList.getItem(inventoryChosen.object.id).use(vars.player);
+
+                        if (
+                            itemsList.getItem(inventoryChosen.object.id).effects.isOneUse ||
+                            (maint.isReachable(inventoryChosen.object.meta) &&
+                            inventoryChosen.object.meta.isOneUse)
+                        ){
+                            vars.player.inventory.removeItem(inventoryChosen.inventoryID);
+                        }
                     }
                 }
 

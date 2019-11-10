@@ -296,11 +296,21 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     choseSprite("consumables", 35),
                     "Regens health for 40 points for 5 seconds",
                     10,
-                    {"isTemp": true, "time": 5000},
+                    null,
                     function (user) {
-                        maint.restoreHealth(user, 0.04)
+                        user.actions[user.actions.length] = new classes.Effect(
+                            "Regen",
+                            "You are regenerating",
+                            10000,
+                            (user) => {maint.restoreHealth(user, 0.24)},
+                            false,
+                            1,
+                            user
+
+                        );
                     },
-                    "consumable"
+                    "consumable",
+                    {"isOneUse":true}
                 ),
                 new classes.Weapon(
                     "Wrath bringer",

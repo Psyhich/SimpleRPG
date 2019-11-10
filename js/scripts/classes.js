@@ -26,7 +26,7 @@ define(["maintenance","vars"],function (maint,vars) {
                         }
                         this.duration += data[i].d;
                         if (typeof data[i].loop !== undefined) {
-                            this.loop = data[i].loop ? true : false;
+                            this.loop = !!data[i].loop;
                         }
                     }
                 }
@@ -36,7 +36,7 @@ define(["maintenance","vars"],function (maint,vars) {
             }
         };
 
-        drawWH = function (t,ctx,x,y,w,h) {
+        drawWH(t,ctx,x,y,w,h) {
             let frameId = 0;
             if(!this.loop && this.animated && t >= this.duration){
                 frameId = (this.frames.length - 1);
@@ -64,7 +64,7 @@ define(["maintenance","vars"],function (maint,vars) {
             this.h = h;
         };
 
-        draw = function (t,ctx,x,y){
+        draw(t,ctx,x,y){
             let frameId = 0;
             if(!this.loop && this.animated && t >= this.duration){
                 frameId = (this.frames.length - 1);
@@ -92,12 +92,12 @@ define(["maintenance","vars"],function (maint,vars) {
             this.h = this.frames[frameId].ph;
         };
 
-        getWidth = function () {
+        getWidth() {
             let output = 0;
             this.frames.forEach((val) => {output = val.w > output ? val.w : output;});
             return output;
         };
-        getHeight = function () {
+        getHeight() {
             let output = 0;
             this.frames.forEach((val) => {output = val.h > output ? val.h : output;});
             return output;
@@ -112,14 +112,14 @@ define(["maintenance","vars"],function (maint,vars) {
             this.sprite = sprite;
             this.description = description;
             this.cost = cost;
-            this.meta = maint.isReachable(meta) ? meta : null;
+            this.meta = maint.isReachable(meta) ? meta : {};
             this.action = maint.isReachable(action) ? action : null;
             this.type = maint.isReachable(type) ? type :"item";
-            this.effects = maint.isReachable(effects) ? effects : undefined;
+            this.effects = maint.isReachable(effects) ? effects : {};
         };
 
         //Use item if possible function
-        use = function (user) {
+        use(user) {
             if(this.action !== null){
                 this.action(user);
             }
@@ -211,7 +211,7 @@ define(["maintenance","vars"],function (maint,vars) {
             this.type = "skill";
         };
 
-        use = function (user) {
+        use(user) {
             this.action(user);
         };
 
@@ -241,6 +241,50 @@ define(["maintenance","vars"],function (maint,vars) {
             }
             return isAvailableToLearn;
         };
+    };
+
+    //Effects
+    classes.Effect = class{
+        /**
+         * @param name name
+         * @param description
+         * @param time Means the time that should pass to remove effect
+         * @param action action that will happen in this effect should be like: action(user){your code}
+         * @param isAura if it's true it will ignore repeatTime and do action every iteration
+         * @param repeatTime if isAura is false it will repeat action after this time
+         * @param user the entity that has its effect
+         * */
+        constructor(name, description, time, action, isAura,repeatTime,user){
+            this.name = name;
+            this.description = description;
+            this.action = action;
+            //Time
+            this.delpTime = vars.lastTime;
+            this.time = time;
+            this.isAura = isAura;
+            this.repeatTime = isAura ? null : repeatTime;
+            this.lastAction = isAura ? null : 0;
+            this.user = user;
+        }
+
+        /**
+         * If this effect time ends this method will giveout false
+         *
+         * */
+            act(){
+            if(this.delpTime + this.time <= vars.lastTime){
+                console.log(this.name + " ended");
+                return false;
+            }else {
+                if(this.isAura || this.lastAction + this.repeatTime <= vars.lastTime){
+                    this.action(this.user);
+                    console.log(vars.lastTime - this.lastAction + " " + this.repeatTime);
+                    this.lastAction = !this.isAura ? vars.lastTime : null;
+                    return true;
+                }
+
+            }
+        }
     };
 
     //Inventory class
@@ -401,7 +445,7 @@ define(["maintenance","vars"],function (maint,vars) {
                 }else if(origin.type === "consumable"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
                     vars.ctx.fillText("When consumed: ",this.x + 30,this.y + 335);
-                    vars.ctx.fillText("" + origin.effects.actions,this.x + 30,this.y + 350);
+                    //vars.ctx.fillText("" + origin.effects.actions,this.x + 30,this.y + 350);
                     vars.ctx.fillText("It's cost: " + origin.cost + " coins",this.x + 30,this.y + 365);
                 }else if(origin.type === "skillBook"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
@@ -704,7 +748,6 @@ define(["maintenance","vars"],function (maint,vars) {
                 //Checking, then attacking
                 if(!this.isDead){
                     if (this.attack === true && this.timeFromLastAttack >= itemList.getItem(this.inventory.getWeapon().id).effects.cooldown) {
-                        let temp = false;
                         let playerWeapon = this.inventory.getWeapon();
                         let origin = itemList.getItem(playerWeapon.id);
                         if(origin.effects.weaponType === "melee"){
@@ -750,17 +793,9 @@ define(["maintenance","vars"],function (maint,vars) {
                 }
                 this.attack = false;
             }
-            /*Buffs, debuffs and other temporary effects*/
-            if(this.actions.length > 0){
-                for(let i = 0;i < this.actions.length;i++) {
-                    if(this.actions[i].deployed + this.actions[i].time < vars.lastTime){
-                        this.actions.splice(i,1);
-                        i--;
-                    }else{
-                        this.actions[i].action(this);
-                    }
-                }
-            }
+
+            //Buffs, debuffs and other temporary effects
+            this.operateActions();
 
             //Checking for injuries and beginning health regeneration after 9 seconds
             if(this.lastHealth === this.hp) {
@@ -827,6 +862,18 @@ define(["maintenance","vars"],function (maint,vars) {
 
         };
         interactions = function(){
+
+        };
+
+        //Operating with player actions //TODO make actions system
+        operateActions = function(){
+            for(let i = 0;i < this.actions.length;i++) {
+                if(!this.actions[i].act()){
+                    this.actions.splice(i,1);
+                }
+            }
+        };
+        addAction = function(name, action, fullTime, timeBetweenActions, isRepeated){
 
         };
 
@@ -913,7 +960,7 @@ define(["maintenance","vars"],function (maint,vars) {
             this.keeper = keeper;
         };
 
-        drawShop = function (vars){
+        drawShop(vars){
             vars.ctx.drawImage(vars.assets.shopSprite,this.x,this.y);
             let count = 0;
             for(let i = this.pos;i < this.pos + 4;i++){
@@ -941,7 +988,7 @@ define(["maintenance","vars"],function (maint,vars) {
             maint.wrapText(vars.ctx,this.keeper.name + "'s money: " + this.keeper.money,this.x + 20,this.y + 30,100,10);
         };
 
-        updateShop = function (vars){
+        updateShop(vars){
             if(vars.events.isWheel === true){
                 if( vars.mouseX > this.x && vars.mouseX < this.x + this.w && vars.mouseY > this.y && vars.mouseY < this.y + this.h){
                     if(vars.events.deltaY > 0 && this.pos + 1 <= this.items.length){
@@ -1096,7 +1143,7 @@ define(["maintenance","vars"],function (maint,vars) {
             this.spawners = [];
         };
 
-        build = function (data,w,h) {
+        build(data,w,h) {
             this.w = w;
             this.h = h;
 
@@ -1124,7 +1171,7 @@ define(["maintenance","vars"],function (maint,vars) {
             this.bottom = this.top + this.height;
         };
 
-        set = function(left, top, /*optional*/width, /*optional*/height){
+        set(left, top, /*optional*/width, /*optional*/height){
             this.left = left;
             this.top = top;
             this.width = width || this.width;
@@ -1133,14 +1180,14 @@ define(["maintenance","vars"],function (maint,vars) {
             this.bottom = (this.top + this.height);
         };
 
-        within = function(r) {
+        within(r) {
             return (r.left <= this.left &&
                 r.right >= this.right &&
                 r.top <= this.top &&
                 r.bottom >= this.bottom);
         };
 
-        overlaps = function(r) {
+        overlaps(r) {
             return (this.left < r.right &&
                 r.left < this.right &&
                 this.top < r.bottom &&
@@ -1185,13 +1232,13 @@ define(["maintenance","vars"],function (maint,vars) {
 
         };
 
-        follow = function(gameObject, xDeadZone, yDeadZone){
+        follow(gameObject, xDeadZone, yDeadZone){
             this.followed = gameObject;
             this.xDeadZone = xDeadZone;
             this.yDeadZone = yDeadZone;
         };
 
-        update = function(){
+        update(){
             // keep following the player (or other desired object)
             if(this.followed != null){
                 if(this.axis === this.AXIS.HORIZONTAL || this.axis === this.AXIS.BOTH)
