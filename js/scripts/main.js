@@ -340,7 +340,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "isDead":false,
             "isInvOpen":false,
             "money":100,
-            "items":[itemsList.items[8],itemsList.items[0],itemsList.items[1],itemsList.items[2]]
+            "items":[itemsList.items[0],itemsList.items[1],itemsList.items[2],itemsList.items[4],itemsList.items[8],itemsList.items[16]]
         };
         vars.weaponTrader = jQuery.extend(true,{},vars.sTrader);
         vars.weaponTrader.items = [itemsList.items[5],itemsList.items[12],itemsList.items[13],itemsList.items[14]];
@@ -1149,8 +1149,12 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                 //Checking if use button clicked
                 if (
                     vars.events.isLeftMouseReleased &&
-                    (vars.mouseX > vars.player.inventory.x + 216 && vars.mouseX < vars.player.inventory.x + 216 + 63 &&
-                        vars.mouseY > vars.player.inventory.y + 312 && vars.mouseY < vars.player.inventory.y + 312 + 30)
+                    (
+                        vars.mouseX > vars.player.inventory.x + 216 &&
+                        vars.mouseX < vars.player.inventory.x + 216 + 63 &&
+                        vars.mouseY > vars.player.inventory.y + 312 &&
+                        vars.mouseY < vars.player.inventory.y + 312 + 30
+                    )
                 ) {
                     if(
                         maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).action)
@@ -1179,6 +1183,14 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             }
 
             //Checking for inventory moving //TODO: just. make. this.
+            if(
+                vars.events.isLeftMousePressed &&
+                vars.mouseX > vars.player.inventory.x && vars.mouseX < vars.player.inventory.x + 280 &&
+                vars.mouseY > vars.player.inventory.y && vars.mouseY < vars.player.inventory.y + 90
+            ){
+                vars.player.inventory.x = vars.mouseX - 140;
+                vars.player.inventory.y = vars.mouseY - 45;
+            }
 
         }
 

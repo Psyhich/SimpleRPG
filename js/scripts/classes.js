@@ -278,7 +278,7 @@ define(["maintenance","vars"],function (maint,vars) {
             }else {
                 if(this.isAura || this.lastAction + this.repeatTime <= vars.lastTime){
                     this.action(this.user);
-                    console.log(vars.lastTime - this.lastAction + " " + this.repeatTime);
+                    //console.log(vars.lastTime - this.lastAction + " " + this.repeatTime);
                     this.lastAction = !this.isAura ? vars.lastTime : null;
                     return true;
                 }
@@ -303,6 +303,8 @@ define(["maintenance","vars"],function (maint,vars) {
             //Making inventory slots
             for(let i = 0;i < 9;i++){
                 this.slots[i] = {
+                    "lx":this.getPosByID(i).x - this.x,
+                    "ly":this.getPosByID(i).y - this.y,
                     "x":this.getPosByID(i).x,
                     "y":this.getPosByID(i).y,
                     "inventoryID":i,
@@ -316,8 +318,10 @@ define(["maintenance","vars"],function (maint,vars) {
             for(let index in equps){
                 let value = equps[index];
                 this.equipment[value] = {
-                    "x": this.x + 27 + (index * 48 + (index !== 4 ? (index * 3) : 0)),
-                    "y": this.y + 445,
+                    "lx": 27 + (index * 48 + (index !== 4 ? (index * 3) : 0)),
+                    "ly": 445,
+                    "x": 27 + (index * 48 + (index !== 4 ? (index * 3) : 0)),
+                    "y": 445,
                     "w": this.w,
                     "h": this.h,
                     "type": value,
@@ -336,6 +340,9 @@ define(["maintenance","vars"],function (maint,vars) {
             //Drawing all inventory items //TODO implement many slots feature
             for(let value of this.slots) {
                 let item = value.object;
+                value.x = this.getPosByID(value.inventoryID).x;
+                value.y = this.getPosByID(value.inventoryID).y;
+
                 if(maint.isReachable(item)){
                     //Getting orinal item
                     let origin = itemList.getItem(item.id);
@@ -362,6 +369,10 @@ define(["maintenance","vars"],function (maint,vars) {
 
             //Drawing all equipment items
             for(let index in this.equipment){
+                let value = this.equipment[index];
+
+                value.x = this.getPosByID(value.inventoryID).x;
+                value.y = this.getPosByID(value.inventoryID).y;
                 //Getting item
                 let item = this.getSlot(index).object;
 
@@ -380,13 +391,27 @@ define(["maintenance","vars"],function (maint,vars) {
 
                     //Drawing item
                     if(item === this.chosen.object && vars.events.isMouseWithInv){
-                        origin.sprite.drawWH(vars.gameTime, vars.ctx, vars.mouseX - w / 2, vars.mouseY - h / 2, w, h);
+                        origin.sprite.drawWH(
+                            vars.gameTime,
+                            vars.ctx,
+                            vars.mouseX - w / 2,
+                            vars.mouseY - h / 2,
+                            w,
+                            h
+                        );
                     }else {
                         //Getting needed distance to reach center of inventory slot
                         let tw = this.w / 2 - w / 2;
                         let th = this.h / 2 - h / 2;
 
-                        origin.sprite.drawWH(vars.gameTime, vars.ctx, this.equipment[index].x + tw, this.equipment[index].y + th, w, h);
+                        origin.sprite.drawWH(
+                            vars.gameTime,
+                            vars.ctx,
+                            value.x + tw,
+                            value.y + th,
+                            w,
+                            h
+                        );
                     }
                 }
 
@@ -615,8 +640,8 @@ define(["maintenance","vars"],function (maint,vars) {
                     }
                 }
             }else if(isNaN(id) && maint.isReachable(this.equipment[id])){
-                pos.x = this.equipment[id].x;
-                pos.y = this.equipment[id].y;
+                pos.x = this.equipment[id].lx + this.x;
+                pos.y = this.equipment[id].ly + this.y;
                 return pos;
             }else{
                 console.log("Not an ID");
@@ -991,7 +1016,7 @@ define(["maintenance","vars"],function (maint,vars) {
         updateShop(vars){
             if(vars.events.isWheel === true){
                 if( vars.mouseX > this.x && vars.mouseX < this.x + this.w && vars.mouseY > this.y && vars.mouseY < this.y + this.h){
-                    if(vars.events.deltaY > 0 && this.pos + 1 <= this.items.length){
+                    if(vars.events.deltaY > 0 && this.pos + 4 + 1 < this.items.length){
                         this.pos += 1;
                     }else if(vars.events.deltaY < 0 && this.pos - 1 >= 0){
                         this.pos -= 1;
