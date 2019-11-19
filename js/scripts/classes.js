@@ -301,7 +301,8 @@ define(["maintenance","vars"],function (maint,vars) {
             this.chosen = null;/** chosen is an copy of slot that contains chosen item*/
 
             //Making inventory slots
-            for(let i = 0;i < 9;i++){
+            this.slots.length = 12;
+            for(let i = 0;i < this.slots.length;i++){
                 this.slots[i] = {
                     "lx":this.getPosByID(i).x - this.x,
                     "ly":this.getPosByID(i).y - this.y,
@@ -340,10 +341,17 @@ define(["maintenance","vars"],function (maint,vars) {
             //Drawing all inventory items //TODO implement many slots feature
             for(let value of this.slots) {
                 let item = value.object;
-                value.x = this.getPosByID(value.inventoryID).x;
-                value.y = this.getPosByID(value.inventoryID).y;
 
-                if(maint.isReachable(item)){
+
+                if(
+                    maint.isReachable(item) &&
+                    ((value.inventoryID >= (this.verticalPosition * 3) &&
+                        value.inventoryID <= this.verticalPosition * 3 + 9) ||
+                            (vars.events.isMouseWithInv && value === this.chosen)
+                    )
+                ){
+                    value.x = this.getPosByID(value.inventoryID).x;
+                    value.y = this.getPosByID(value.inventoryID).y;
                     //Getting orinal item
                     let origin = itemList.getItem(item.id);
                     //Getting width and height of item
@@ -623,15 +631,18 @@ define(["maintenance","vars"],function (maint,vars) {
         //Simple getters
         getPosByID = function(id){
             let pos = {
-                "x":0,
+                "x":-10000,
                 "y":0
             };
             //Getting ID of tile in inventory
-            if((id >= 0 && id < 9) && !isNaN(id)){
+            if(
+                !isNaN(id) &&
+                (id >= this.verticalPosition * 3 && id < (this.verticalPosition * 3 + 9))
+            ){
                 let count = 0;
-                for(let x = 0;x < 3;x++){
-                    for(let y = 0;y < 3;y++){
-                        if(id === count){
+                for(let y = 0;y < 3;y++){
+                    for(let x = 0;x < 3;x++){
+                        if(id - this.verticalPosition * 3 === count){
                             pos.x = this.x + 28 + x * this.w;
                             pos.y = this.y + 127 + y * this.h;
                             return pos;
@@ -639,7 +650,15 @@ define(["maintenance","vars"],function (maint,vars) {
                         count++;
                     }
                 }
-            }else if(isNaN(id) && maint.isReachable(this.equipment[id])){
+            }else if(
+                !isNaN(id) &&
+                id >= 0 && id <= this.slots.length
+            ){
+                return pos;
+            }else if(
+                isNaN(id) &&
+                maint.isReachable(this.equipment[id]))
+            {
                 pos.x = this.equipment[id].lx + this.x;
                 pos.y = this.equipment[id].ly + this.y;
                 return pos;

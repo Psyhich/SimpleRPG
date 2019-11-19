@@ -34,6 +34,7 @@ define([],function () {
         "isMouseWithInv":false,
         "isInvBarWithMouse":false,
         "isWheel":false,
+        "deltaY":0,//for mouse wheel
         "keys":{
             "isNumLockUsed":false,
             "isEscPressed":false,

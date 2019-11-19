@@ -372,7 +372,6 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
     func.update = function(dt,vars,maint){
         vars.events.isWheel = vars.events.deltaY > 0 || vars.events.deltaY < 0;
-
         func.uiActions(dt,vars,maint);
         if(vars.events.isPaused === false){
             func.gameActions(dt,vars,maint);
@@ -1020,19 +1019,21 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         let chosenSlot;
         //Working with inventory
         if(vars.events.isInventoryOpen){
+            let inventory = vars.player.inventory;
+
             //Searching for pulled with mouse inventory or player equipment and shop interaction
-            for(let index in vars.player.inventory.slots){
+            for(let index in inventory.slots){
                 index = parseInt(index);
-                let value = vars.player.inventory.getSlot(parseInt(index));
+                let value = inventory.getSlot(parseInt(index));
                 //Checking if mouse pos is on some slot
                 if(
                     maint.isReachable(value.object) &&
-                    (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w &&
-                    (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.h))
+                    (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w &&
+                    (vars.mouseY > value.y && vars.mouseY < value.y + inventory.h))
                 ){
                     let originalItem = itemsList.getItem(value.object.id);
                     if(vars.events.isLeftMousePressed && !vars.events.isMouseWithInv){
-                        vars.player.inventory.chosen = value;
+                        inventory.chosen = value;
                         vars.events.isMouseWithInv = true;
                         vars.isChecked = true;
                         break
@@ -1057,15 +1058,15 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
             //If not found in inventory, than searching in equipment
             if(isChecked === false){
-                for(let index in vars.player.inventory.equipment){
-                    let value = vars.player.inventory.equipment[index];
+                for(let index in inventory.equipment){
+                    let value = inventory.equipment[index];
                     if(maint.isReachable(value.object) &&
-                        (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w) &&
-                        (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.w) &&
+                        (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w) &&
+                        (vars.mouseY > value.y && vars.mouseY < value.y + inventory.w) &&
                         vars.events.isMouseWithInv === false &&
                         vars.events.isLeftMousePressed === true
                     ){
-                        vars.player.inventory.chosen = value;
+                        inventory.chosen = value;
                         vars.events.isMouseWithInv = true;
                         break
                     }
@@ -1074,23 +1075,23 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             isChecked = false;
 
             //Interacting if user already clicked on some item
-            if(vars.events.isMouseWithInv && maint.isReachable(vars.player.inventory.chosen)){
+            if(vars.events.isMouseWithInv && maint.isReachable(inventory.chosen)){
                 //Making buffer value of pulled object
-                chosenSlot = vars.player.inventory.chosen;
+                chosenSlot = inventory.chosen;
 
 
                 //Manipulations if mouse clicked up
                 if(vars.events.isLeftMouseReleased || vars.events.isInventoryOpen === false){
                     //Trying to find another inventory or equipment tile to put the object
                     if(vars.events.isMouseWithInv) {
-                        for(let index in vars.player.inventory.slots){
-                            let value = vars.player.inventory.slots[index];
+                        for(let index in inventory.slots){
+                            let value = inventory.slots[index];
 
                             if (
-                                (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w) &&
-                                (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.h)
+                                (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w) &&
+                                (vars.mouseY > value.y && vars.mouseY < value.y + inventory.h)
                             ) {
-                                vars.player.inventory.swapItems(value.inventoryID, chosenSlot.inventoryID);
+                                inventory.swapItems(value.inventoryID, chosenSlot.inventoryID);
 
                                 vars.events.isMouseWithInv = false;
                                 isChecked = true;
@@ -1098,14 +1099,14 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                             }
                         }
                         if(isChecked === false){
-                            for(let index in vars.player.inventory.equipment){
-                                let value = vars.player.inventory.equipment[index];
+                            for(let index in inventory.equipment){
+                                let value = inventory.equipment[index];
 
                                 if(
-                                    (vars.mouseX > value.x && vars.mouseX < value.x + vars.player.inventory.w) &&
-                                    (vars.mouseY > value.y && vars.mouseY < value.y + vars.player.inventory.h)
+                                    (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w) &&
+                                    (vars.mouseY > value.y && vars.mouseY < value.y + inventory.h)
                                 ){
-                                    vars.player.inventory.swapItems(value.inventoryID,chosenSlot.inventoryID);
+                                    inventory.swapItems(value.inventoryID,chosenSlot.inventoryID);
                                     vars.events.isMouseWithInv = false;
                                     isChecked = true;
                                     break
@@ -1123,41 +1124,41 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             }
 
             //Checking if some interaction buttons pressed(works only when there is a chosen item)
-            if(maint.isReachable(vars.player.inventory.chosen)) {
-                let inventoryChosen = vars.player.inventory.chosen;
+            if(maint.isReachable(inventory.chosen)) {
+                let inventoryChosen = inventory.chosen;
                 //Checking if drop button clicked
                 if (
                     vars.events.isLeftMouseReleased &&
-                    ((vars.mouseX > vars.player.inventory.x + 216 && vars.mouseX < vars.player.inventory.x + 216 + 63) &&
-                        (vars.mouseY > vars.player.inventory.y + 345 && vars.mouseY < vars.player.inventory.y + 345 + 30))
+                    ((vars.mouseX > inventory.x + 216 && vars.mouseX < inventory.x + 216 + 63) &&
+                        (vars.mouseY > inventory.y + 345 && vars.mouseY < inventory.y + 345 + 30))
                 ) {
                     vars.isChecked = false;
                     //By mathimethic(lul) getting cords for dropped item
                     let x2 = vars.player.x + Math.cos((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
                     let y2 = vars.player.y - Math.sin((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
                     let item = {
-                        "w": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.w,
-                        "h": itemsList.getItem(vars.player.inventory.chosen.object.id).sprite.h
+                        "w": itemsList.getItem(inventory.chosen.object.id).sprite.w,
+                        "h": itemsList.getItem(inventory.chosen.object.id).sprite.h
                     };
                     //Creating("dropping item")
                     maint.createInTheWorld(x2 - item.w / 1.8, y2 - item.h / 1.8, inventoryChosen.object.id, vars, {"amount": inventoryChosen.object.amount});
 
                     //Removing it from inventory
-                    vars.player.inventory.removeItem(inventoryChosen.inventoryID);
+                    inventory.removeItem(inventoryChosen.inventoryID);
                 }
 
                 //Checking if use button clicked
                 if (
                     vars.events.isLeftMouseReleased &&
                     (
-                        vars.mouseX > vars.player.inventory.x + 216 &&
-                        vars.mouseX < vars.player.inventory.x + 216 + 63 &&
-                        vars.mouseY > vars.player.inventory.y + 312 &&
-                        vars.mouseY < vars.player.inventory.y + 312 + 30
+                        vars.mouseX > inventory.x + 216 &&
+                        vars.mouseX < inventory.x + 216 + 63 &&
+                        vars.mouseY > inventory.y + 312 &&
+                        vars.mouseY < inventory.y + 312 + 30
                     )
                 ) {
                     if(
-                        maint.isReachable(itemsList.getItem(vars.player.inventory.chosen.object.id).action)
+                        maint.isReachable(itemsList.getItem(inventory.chosen.object.id).action)
                     ){
                         itemsList.getItem(inventoryChosen.object.id).use(vars.player);
 
@@ -1166,7 +1167,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                             (maint.isReachable(inventoryChosen.object.meta) &&
                             inventoryChosen.object.meta.isOneUse)
                         ){
-                            vars.player.inventory.removeItem(inventoryChosen.inventoryID);
+                            inventory.removeItem(inventoryChosen.inventoryID);
                         }
                     }
                 }
@@ -1176,20 +1177,37 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             //Checking if close button pressed
             if (
                 vars.events.isLeftMouseReleased === true &&
-                vars.mouseX > vars.player.inventory.x + 288 && vars.mouseX < vars.player.inventory.x + 288 + 60 &&
-                vars.mouseY > vars.player.inventory.y + 12 && vars.mouseY < vars.player.inventory.y + 12 + 72
+                vars.mouseX > inventory.x + 288 && vars.mouseX < inventory.x + 288 + 60 &&
+                vars.mouseY > inventory.y + 12 && vars.mouseY < inventory.y + 12 + 72
             ) {
                 vars.events.isInventoryOpen = false;
             }
 
-            //Checking for inventory moving //TODO: just. make. this.
+            //Checking for mousewheel for change in vertical position
+            if(
+                vars.events.isWheel &&
+                (vars.mouseX >= inventory.x + 27 && vars.mouseX <= inventory.x + 176) &&
+                (vars.mouseY >= inventory.y + 125 && vars.mouseY <= inventory.y + 275)
+            ){
+                if(vars.events.deltaY > 0){
+                    if((inventory.verticalPosition + 1) * 9 < inventory.slots.length){
+                        inventory.verticalPosition++;
+                    }
+                }else{
+                    if(inventory.verticalPosition - 1 >= 0){
+                        inventory.verticalPosition--;
+                    }
+                }
+            }
+
+            //Checking for inventory moving
             if(
                 vars.events.isLeftMousePressed &&
-                vars.mouseX > vars.player.inventory.x && vars.mouseX < vars.player.inventory.x + 280 &&
-                vars.mouseY > vars.player.inventory.y && vars.mouseY < vars.player.inventory.y + 90
+                vars.mouseX > inventory.x && vars.mouseX < inventory.x + 280 &&
+                vars.mouseY > inventory.y && vars.mouseY < inventory.y + 90
             ){
-                vars.player.inventory.x = vars.mouseX - 140;
-                vars.player.inventory.y = vars.mouseY - 45;
+                inventory.x = vars.mouseX - 140;
+                inventory.y = vars.mouseY - 45;
             }
 
         }
