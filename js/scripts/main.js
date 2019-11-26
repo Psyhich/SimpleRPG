@@ -30,7 +30,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
 
 
         //Camera
-        vars.camera = new classes.Camera(0,0,canvas.width,canvas.height,3200,3200);
+        vars.camera = new classes.Camera(0,0,vars.canvas.width,vars.canvas.height,3200,3200);
 
         //Load game
         maint.loadGame(vars.camera,vars);
@@ -340,7 +340,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
             "isDead":false,
             "isInvOpen":false,
             "money":100,
-            "items":[itemsList.items[0],itemsList.items[1],itemsList.items[2],itemsList.items[4],itemsList.items[8],itemsList.items[16]]
+            "items":[itemsList.items[0],itemsList.items[1],itemsList.items[2],itemsList.items[4],itemsList.items[8]]
         };
         vars.weaponTrader = jQuery.extend(true,{},vars.sTrader);
         vars.weaponTrader.items = [itemsList.items[5],itemsList.items[12],itemsList.items[13],itemsList.items[14]];
@@ -459,7 +459,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         vars.ctx.beginPath();
         vars.ctx.fillStyle = vars.player.color;
         vars.ctx.srtokeStyle = "rgba(0,0,0,1.0)";
-        vars.ctx.arc(vars.player.x - vars.camera.xView,vars.player.y - vars.camera.yView,vars.player.size,0,360,false);
+        vars.ctx.arc(vars.player.x - vars.camera.xView,vars.player.y - vars.camera.yView,vars.player.stats.size * 12,0,360,false);
         vars.ctx.fill();
         vars.ctx.stroke();
         vars.ctx.closePath();
@@ -715,7 +715,12 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
     func.gameActions = function(dt,vars,maint){
         //Event on collision with tiles
         jQuery.each(vars.map.map,function (index,value) {
-            if(maint.circleToRectIntersection(vars.player.x,vars.player.y,vars.player.size,value.x * vars.map.tileW,value.y * vars.map.tileH,vars.map.tileW,vars.map.tileW )){
+            if(
+                maint.circleToRectIntersection(
+                    vars.player.x,vars.player.y,
+                    vars.player.stats.size * 12,value.x * vars.map.tileW,
+                    value.y * vars.map.tileH,vars.map.tileW,vars.map.tileW )
+            ){
                 itemsList.tileTypes[value.id].action(vars.player,value.x,value.y);
             }
         });
@@ -780,10 +785,10 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                 if (count === vars.player.attackBox){
                     vars.ctx.rect(vars.player.x - vars.player.size * 3 + u * vars.player.size * 3 / 2, vars.player.y - vars.player.size * 3 + i * vars.player.size * 3 / 2, vars.player.size * 3, vars.player.size * 3);
 
-                    vars.playerAttackBox.x = vars.player.x - vars.player.size * 3 + u * vars.player.size * 3 / 2;
-                    vars.playerAttackBox.y = vars.player.y - vars.player.size * 3 + i * vars.player.size * 3 / 2;
-                    vars.playerAttackBox.w = vars.player.size * 3;
-                    vars.playerAttackBox.h = vars.player.size * 3;
+                    vars.playerAttackBox.x = vars.player.x - vars.player.stats.size * 3 * 12 + u * vars.player.stats.size * 3 * 12 / 2;
+                    vars.playerAttackBox.y = vars.player.y - vars.player.stats.size * 3 * 12 + i * vars.player.stats.size * 3 * 12 / 2;
+                    vars.playerAttackBox.w = vars.player.stats.size * 3 * 12;
+                    vars.playerAttackBox.h = vars.player.stats.size * 3 * 12;
                 }
                 count++;
             }
@@ -796,7 +801,11 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
                 for(let index = 0;index < vars.map.items.length;index++){
                     let value = vars.map.items[index];
 
-                    if (maint.isReachable(value) && (maint.isReachable(itemsList.getItem(value.id).sprite)) && maint.isItemInRange(value, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h, vars.camera) && maint.circleToRectIntersection(vars.player.x, vars.player.y, vars.player.size, value.x, value.y, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h)) {
+                    if (maint.isReachable(value) &&
+                        (maint.isReachable(itemsList.getItem(value.id).sprite)) &&
+                        maint.isItemInRange(value, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h, vars.camera) &&
+                        maint.circleToRectIntersection(vars.player.x, vars.player.y, vars.player.stats.size * 12, value.x, value.y, itemsList.getItem(value.id).sprite.w, itemsList.getItem(value.id).sprite.h)
+                    ) {
                         if (itemsList.getItem(value.id).type === "exp") {
                             vars.player.exp += value.meta.count;
                             vars.map.items.splice(index, 1);
@@ -1019,197 +1028,7 @@ define(["classes","jquery","map","itemList"],function (classes,jQuery,map,itemsL
         let chosenSlot;
         //Working with inventory
         if(vars.events.isInventoryOpen){
-            let inventory = vars.player.inventory;
-
-            //Searching for pulled with mouse inventory or player equipment and shop interaction
-            for(let index in inventory.slots){
-                index = parseInt(index);
-                let value = inventory.getSlot(parseInt(index));
-                //Checking if mouse pos is on some slot
-                if(
-                    maint.isReachable(value.object) &&
-                    (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w &&
-                    (vars.mouseY > value.y && vars.mouseY < value.y + inventory.h))
-                ){
-                    let originalItem = itemsList.getItem(value.object.id);
-                    if(vars.events.isLeftMousePressed && !vars.events.isMouseWithInv){
-                        inventory.chosen = value;
-                        vars.events.isMouseWithInv = true;
-                        vars.isChecked = true;
-                        break
-                    }/* checking if right mouse released and if shopkeeper accept that types if items*/else if(
-                        vars.events.isRightMouseReleased && !vars.events.isMouseWithInv &&
-                        classes.isShopOpened(vars.menues) &&
-                        classes.findShop(vars.menues).menu.shopType.includes(originalItem.type,0)
-                    ){
-                        //Checking if trader can afford this
-                        if(classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs).money - originalItem.cost >= 0) {
-                            vars.player.money += itemsList.getItem(value.object.id).cost;
-                            classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs).money -= originalItem.cost;
-                            value.object = null;
-                            return true;
-                        }else{
-                            maint.genTextAlert("This shopkeeper can't afford this","rgba(255,240,240,1.0)",vars);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            //If not found in inventory, than searching in equipment
-            if(isChecked === false){
-                for(let index in inventory.equipment){
-                    let value = inventory.equipment[index];
-                    if(maint.isReachable(value.object) &&
-                        (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w) &&
-                        (vars.mouseY > value.y && vars.mouseY < value.y + inventory.w) &&
-                        vars.events.isMouseWithInv === false &&
-                        vars.events.isLeftMousePressed === true
-                    ){
-                        inventory.chosen = value;
-                        vars.events.isMouseWithInv = true;
-                        break
-                    }
-                }
-            }
-            isChecked = false;
-
-            //Interacting if user already clicked on some item
-            if(vars.events.isMouseWithInv && maint.isReachable(inventory.chosen)){
-                //Making buffer value of pulled object
-                chosenSlot = inventory.chosen;
-
-
-                //Manipulations if mouse clicked up
-                if(vars.events.isLeftMouseReleased || vars.events.isInventoryOpen === false){
-                    //Trying to find another inventory or equipment tile to put the object
-                    if(vars.events.isMouseWithInv) {
-                        for(let index in inventory.slots){
-                            let value = inventory.slots[index];
-
-                            if (
-                                (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w) &&
-                                (vars.mouseY > value.y && vars.mouseY < value.y + inventory.h)
-                            ) {
-                                inventory.swapItems(value.inventoryID, chosenSlot.inventoryID);
-
-                                vars.events.isMouseWithInv = false;
-                                isChecked = true;
-                                break
-                            }
-                        }
-                        if(isChecked === false){
-                            for(let index in inventory.equipment){
-                                let value = inventory.equipment[index];
-
-                                if(
-                                    (vars.mouseX > value.x && vars.mouseX < value.x + inventory.w) &&
-                                    (vars.mouseY > value.y && vars.mouseY < value.y + inventory.h)
-                                ){
-                                    inventory.swapItems(value.inventoryID,chosenSlot.inventoryID);
-                                    vars.events.isMouseWithInv = false;
-                                    isChecked = true;
-                                    break
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-
-            //Putting back the object if wrong pos
-            if(isChecked === false && vars.events.isLeftMouseReleased && vars.events.isMouseWithInv === true){
-                vars.events.isMouseWithInv = false;
-            }
-
-            //Checking if some interaction buttons pressed(works only when there is a chosen item)
-            if(maint.isReachable(inventory.chosen)) {
-                let inventoryChosen = inventory.chosen;
-                //Checking if drop button clicked
-                if (
-                    vars.events.isLeftMouseReleased &&
-                    ((vars.mouseX > inventory.x + 216 && vars.mouseX < inventory.x + 216 + 63) &&
-                        (vars.mouseY > inventory.y + 345 && vars.mouseY < inventory.y + 345 + 30))
-                ) {
-                    vars.isChecked = false;
-                    //By mathimethic(lul) getting cords for dropped item
-                    let x2 = vars.player.x + Math.cos((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
-                    let y2 = vars.player.y - Math.sin((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
-                    let item = {
-                        "w": itemsList.getItem(inventory.chosen.object.id).sprite.w,
-                        "h": itemsList.getItem(inventory.chosen.object.id).sprite.h
-                    };
-                    //Creating("dropping item")
-                    maint.createInTheWorld(x2 - item.w / 1.8, y2 - item.h / 1.8, inventoryChosen.object.id, vars, {"amount": inventoryChosen.object.amount});
-
-                    //Removing it from inventory
-                    inventory.removeItem(inventoryChosen.inventoryID);
-                }
-
-                //Checking if use button clicked
-                if (
-                    vars.events.isLeftMouseReleased &&
-                    (
-                        vars.mouseX > inventory.x + 216 &&
-                        vars.mouseX < inventory.x + 216 + 63 &&
-                        vars.mouseY > inventory.y + 312 &&
-                        vars.mouseY < inventory.y + 312 + 30
-                    )
-                ) {
-                    if(
-                        maint.isReachable(itemsList.getItem(inventory.chosen.object.id).action)
-                    ){
-                        itemsList.getItem(inventoryChosen.object.id).use(vars.player);
-
-                        if (
-                            itemsList.getItem(inventoryChosen.object.id).effects.isOneUse ||
-                            (maint.isReachable(inventoryChosen.object.meta) &&
-                            inventoryChosen.object.meta.isOneUse)
-                        ){
-                            inventory.removeItem(inventoryChosen.inventoryID);
-                        }
-                    }
-                }
-
-            }
-
-            //Checking if close button pressed
-            if (
-                vars.events.isLeftMouseReleased === true &&
-                vars.mouseX > inventory.x + 288 && vars.mouseX < inventory.x + 288 + 60 &&
-                vars.mouseY > inventory.y + 12 && vars.mouseY < inventory.y + 12 + 72
-            ) {
-                vars.events.isInventoryOpen = false;
-            }
-
-            //Checking for mousewheel for change in vertical position
-            if(
-                vars.events.isWheel &&
-                (vars.mouseX >= inventory.x + 27 && vars.mouseX <= inventory.x + 176) &&
-                (vars.mouseY >= inventory.y + 125 && vars.mouseY <= inventory.y + 275)
-            ){
-                if(vars.events.deltaY > 0){
-                    if((inventory.verticalPosition + 1) * 9 < inventory.slots.length){
-                        inventory.verticalPosition++;
-                    }
-                }else{
-                    if(inventory.verticalPosition - 1 >= 0){
-                        inventory.verticalPosition--;
-                    }
-                }
-            }
-
-            //Checking for inventory moving
-            if(
-                vars.events.isLeftMousePressed &&
-                vars.mouseX > inventory.x && vars.mouseX < inventory.x + 280 &&
-                vars.mouseY > inventory.y && vars.mouseY < inventory.y + 90
-            ){
-                inventory.x = vars.mouseX - 140;
-                inventory.y = vars.mouseY - 45;
-            }
-
+            vars.player.inventory.update();
         }
 
         //Menus updates

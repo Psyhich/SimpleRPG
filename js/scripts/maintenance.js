@@ -126,7 +126,7 @@ define([],function () {
         jQuery.each(vars.map.enemies,function (index,value) {
             if(
                 !value.isDead &&
-                maint.circleToRectIntersection(value.x,value.y,maint.getEnemy(value.id,vars.enemyTypes).size,vars.playerAttackBox.x,vars.playerAttackBox.y,vars.playerAttackBox.w,vars.playerAttackBox.h)
+                maint.circleToRectIntersection(value.x,value.y,itemsList.getEnemy(value.id).size,vars.playerAttackBox.x,vars.playerAttackBox.y,vars.playerAttackBox.w,vars.playerAttackBox.h)
             ){
                 let playerAttack = maint.getAttack(vars.player);
                 let enemyDefence = maint.getDef(value);
@@ -137,7 +137,7 @@ define([],function () {
 
                 }else if(enemyDefence >= playerAttack){
                     value.hp -= 1;
-                    maint.genFloatingNumber(value.x,value.y,1,"rgba(0,0,0,1.0)",15)
+                    maint.genFloatingNumber(value.x,value.y,1,"rgba(0,0,0,1.0)",15,vars)
                 }
             }
             if(value.hp <= 0){value.isDead = true;}
@@ -437,17 +437,17 @@ define([],function () {
                 if (
                     maint.isReachable(user.equipment[i]) &&
                     maint.isReachable(user.equipment[i].object)
-                ) {
+                ){
                     speed += maint.isReachable(itemsList.getItem(user.equipment[i].object.id).effects.spd) ? itemsList.getItem(user.equipment[i].object.id).effects.spd : 0;
                 }
             }
         }
-        speed += maint.isReachable(user.speed) ? user.speed : 0;
+        speed += maint.isReachable(user.stats.speed) ? user.stats.speed : 0;
         return speed;
     };
     maint.minusSpeed = function(user,value){
-        if(maint.isReachable(user.speed) && user.speed - value < 0){
-            user.speed -= value
+        if(maint.isReachable(user.stats.speed) && user.stats.speed - value < 0){
+            user.stats.speed -= value
         }
     };
 

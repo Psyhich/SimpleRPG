@@ -33,9 +33,9 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                 xobj.open('GET', path, true);
                 xobj.onreadystatechange = function() {
                     if (xobj.readyState === 4 && xobj.status == "200"){
-
+                        let out = JSON.parse(xobj.responseText);
                         // .open will NOT return a value but simply returns undefined in async mode so use a callback
-                        vars.assets[name[0]] = JSON.parse(xobj.responseText);
+                        vars.assets[out.name] = out;
                         onload();
 
                     }
@@ -88,7 +88,8 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
             "UIPieces",
             "configsSprite",
             "menuSprite",
-            "hotbarChosenSprite"
+            "hotbarChosenSprite",
+            "sliderSprite"
         ],function () {
             vars.loaded = vars.loaded + 15;
         },vars);
@@ -151,6 +152,9 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
             for (let i = 0; i <= 2; i++) {
                 vars.money[i] = itemArea[i + 220];
             }
+
+            //Slider sprite
+            vars.slider = new classes.Sprite([{"px":0, "py":0, "pw":20, "ph":20, "w":20, "h":20}],vars.assets.sliderSprite);
 
             //Arrows array
             vars.arrows[0] = itemArea[388];
@@ -504,7 +508,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.path,
                     "sprite": choseSprite("tiles", 15),
                     "action": function (user, x, y) {
-                        user.speed += 0.4;
+                        user.stats.speed += 0.4;
                     }
                 },
                 {
@@ -512,15 +516,15 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.path,
                     "sprite": choseSprite("tiles", 16),
                     "action": function (user, x, y) {
-                        user.speed += 0.4;
+                        user.stats.speed += 0.4;
                     }
                 },
                 {
                     "colour": "#d6d117",
                     "floor": this.floorTypes.path,
-                    "sprite": choseSprite("tiles", 4),//TODO
+                    "sprite": choseSprite("tiles", 4),
                     "action": function (user, x, y) {
-                        user.speed += 0.4;
+                        user.stats.speed += 0.4;
                     }
                 },
                 {
@@ -528,7 +532,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.path,
                     "sprite": choseSprite("tiles", 18),
                     "action": function (user, x, y) {
-                        user.speed += 0.4;
+                        user.stats.speed += 0.4;
                     }
                 },
                 {
@@ -536,7 +540,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.path,
                     "sprite": choseSprite("tiles", 4),
                     "action": function (user, x, y) {
-                        user.speed += 0.4;
+                        user.stats.speed += 0.4;
                     }
                 },
                 {
@@ -544,7 +548,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.path,
                     "sprite": choseSprite("tiles", 7),
                     "action": function (user, x, y) {
-                        user.speed += 0.4;
+                        user.stats.speed += 0.4;
                     }
                 },
                 {
@@ -552,7 +556,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.bricksPath,
                     "sprite": choseSprite("tiles", 14),
                     "action": function (user, x, y) {
-                        user.speed += 0.8;
+                        user.stats.speed += 0.8;
                     }
                 },
                 {
@@ -560,7 +564,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.ice,
                     "sprite": choseSprite("tiles", 3),
                     "action": function (user, x, y) {
-                        user.speed += 0.1;
+                        user.stats.speed += 0.1;
                         /*if(user.x + user.size > x * vars.map.tileW  || user.x - user.size < x * vars.map.tileW + vars.map.tileW) {
                             user.x += -(user.velX * ((vars.now - vars.lastTime) / 1000)) * maint.getSpeed(user);
                         }if(user.y + user.size > y * vars.map.tileH || user.y - user.size < y * vars.map.tileH + vars.map.tileH) {
@@ -573,7 +577,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.ground,
                     "sprite": choseSprite("tiles", 10),
                     "action": function (user, x, y) {
-                        user.speed += 0.7;
+                        user.stats.speed += 0.7;
                     }
                 },
                 {
@@ -611,7 +615,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "sprite": choseSprite("tiles", 10),
                     "action": function (user, x, y) {
                         if (maint.isReachable(user.mount) && user.mount.type === "fly") {
-                            user.speed += 0;
+                            user.stats.speed += 0;
                         } else {
                             if (user.x + user.size > x * vars.map.tileW || user.x - user.size < x * vars.map.tileW - vars.map.tileW) {
                                 user.x += -(user.velX * ((vars.now - vars.lastTime) / 1000) * maint.getSpeed(user));
@@ -627,7 +631,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "floor": this.floorTypes.ground,
                     "sprite": choseSprite("tiles", 15),
                     "action": function (user, x, y) {
-                        user.speed += 0.7;
+                        user.stats.speed += 0.7;
                     }
                 },
                 {
@@ -636,7 +640,7 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "sprite": choseSprite("tiles", 12),
                     "action": function (user, x, y) {
                         if (maint.isReachable(user.mount) && user.mount.type === "fly") {
-                            user.speed += 0;
+
                         } else {
                             maint.minusSpeed(user, 0.3);
                         }
@@ -649,9 +653,9 @@ define(["classes","vars","maintenance"],function (classes,vars,maint) {
                     "action": function (user, x, y) {
                         if (maint.isReachable(user.mount) && user.mount.type === "fly") {
                         } else if (maint.isReachable(user.mount) && user.mount.type === "swim") {
-                            user.speed -= 0.8;
+                            maint.minusSpeed(user,0.8);
                         } else {
-                            user.speed -= 0.2;
+                            maint.minusSpeed(user,0.2);
                         }
                     }
                 },

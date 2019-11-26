@@ -295,13 +295,19 @@ define(["maintenance","vars"],function (maint,vars) {
             this.y = 10;
             this.w = 48;
             this.h = 48;
+
             this.slots = [];
             this.equipment = {};
-            this.verticalPosition = 0;//TODO implement this + make numbers of inventory slots in player class
             this.chosen = null;/** chosen is an copy of slot that contains chosen item*/
 
+            //vertical movement vars
+            this.verticalPosition = 0;
+            this.sliderY = 0;
+            this.isSliderDragging = false;
+
+
             //Making inventory slots
-            this.slots.length = 12;
+            this.slots.length = Math.pow(9,2);
             for(let i = 0;i < this.slots.length;i++){
                 this.slots[i] = {
                     "lx":this.getPosByID(i).x - this.x,
@@ -309,7 +315,7 @@ define(["maintenance","vars"],function (maint,vars) {
                     "x":this.getPosByID(i).x,
                     "y":this.getPosByID(i).y,
                     "inventoryID":i,
-                    "object":null,
+                    "object":maint.getRandomTOrF() ? {"id":1} : {"id":4},
                     "type":"item"
                 };
             }
@@ -338,9 +344,21 @@ define(["maintenance","vars"],function (maint,vars) {
             //Drawing the sprite of inventory
             vars.ctx.drawImage(vars.assets.inventorySprite,this.x,this.y);
 
-            //Drawing all inventory items //TODO implement many slots feature
+            //TODO should draw slider on its place
+
+            vars.slider.drawWH(
+                vars.lastTime,
+                vars.ctx,
+                this.x + 177,
+                this.y + 133 + this.sliderY,
+                12,
+                12
+                );
+
+            //Drawing all inventory items
             for(let value of this.slots) {
                 let item = value.object;
+
 
 
                 if(
@@ -485,7 +503,6 @@ define(["maintenance","vars"],function (maint,vars) {
                 }else if(origin.type === "ammo"){
                     vars.ctx.fillText(origin.name,this.x + 30,this.y + 320);
                     vars.ctx.fillText("It's amount: " + this.chosen.object.meta.amount,this.x + 30,this.y + 350);
-                    //TODO fix arrows
                 }
 
                 vars.ctx.fill();
@@ -496,8 +513,8 @@ define(["maintenance","vars"],function (maint,vars) {
             //Draw money count and upgrade points
             vars.ctx.font = "12px Arial";
             vars.ctx.fillStyle = "rgba(0,0,0,1.0)";
-            vars.ctx.fillText("Money: " + vars.player.money,this.x + 185,this.y + 135);
-            maint.wrapText(vars.ctx,"Available upgrade points: " + vars.player.upgradePoints,this.x + 185,this.y + 195,90,13);
+            vars.ctx.fillText("Money: " + vars.player.money,this.x + 200,this.y + 135);
+            maint.wrapText(vars.ctx,"Available upgrade points: " + vars.player.upgradePoints,this.x + 200,this.y + 195,90,13);
 
 
             //Draw level
@@ -505,16 +522,231 @@ define(["maintenance","vars"],function (maint,vars) {
             //Background
             vars.ctx.fillStyle = "rgba(200,200,200,1.0)";
             vars.ctx.beginPath();
-            vars.ctx.rect(this.x + 185,this.y + 165,95,10);
+            vars.ctx.rect(this.x + 200,this.y + 165,85,10);
             vars.ctx.closePath();
             vars.ctx.fill();
 
             //Front
             vars.ctx.fillStyle = "rgba(100,100,100,1.0)";
             vars.ctx.beginPath();
-            vars.ctx.rect(this.x + 185,this.y + 165,95 * vars.player.exp / vars.player.expToNextLevel,10);
+            vars.ctx.rect(this.x + 200,this.y + 165,85 * vars.player.exp / vars.player.expToNextLevel,10);
             vars.ctx.closePath();
             vars.ctx.fill();
+        };
+
+        update = function(){
+            let isChecked = false;
+
+            //Searching for pulled with mouse inventory or player equipment and shop interaction
+            for(let index = this.verticalPosition * 3;index < this.verticalPosition * 3 + 9;index++){
+                let value = this.getSlot(index);
+                //Checking if mouse pos is on some slot
+                if(
+                    maint.isReachable(value.object) &&
+                    (vars.mouseX > value.x && vars.mouseX < value.x + this.w &&
+                        (vars.mouseY > value.y && vars.mouseY < value.y + this.h))
+                ){
+                    if(vars.events.isLeftMousePressed && !vars.events.isMouseWithInv){
+                        this.chosen = value;
+                        vars.events.isMouseWithInv = true;
+                        vars.isChecked = true;
+                        break
+                    }/* checking if right mouse released and if shopkeeper accept that types if items*/else if(
+                        vars.events.isRightMouseReleased && !vars.events.isMouseWithInv
+                    ){
+                        this.sellItem(index);
+                    }
+                }
+            }
+
+            //If not found in this, than searching in equipment
+            if(!isChecked){
+                for(let index in this.equipment){
+                    let value = this.equipment[index];
+                    if(maint.isReachable(value.object) &&
+                        (vars.mouseX > value.x && vars.mouseX < value.x + this.w) &&
+                        (vars.mouseY > value.y && vars.mouseY < value.y + this.w) &&
+                        vars.events.isMouseWithInv === false &&
+                        vars.events.isLeftMousePressed === true
+                    ){
+                        this.chosen = value;
+                        vars.events.isMouseWithInv = true;
+                        break
+                    }
+                }
+            }
+            isChecked = false;
+
+            //Interacting if user already clicked on some item
+            if(vars.events.isMouseWithInv && maint.isReachable(this.chosen)){
+                //Manipulations if mouse clicked up
+                if(vars.events.isLeftMouseReleased || vars.events.isthisOpen === false){
+                    //Trying to find another this or equipment tile to put the object
+                    if(vars.events.isMouseWithInv) {
+                        for(let index = this.verticalPosition * 3;index < this.verticalPosition * 3 + 9;index++){
+                            let value = this.slots[index];
+
+                            if (
+                                (vars.mouseX > value.x && vars.mouseX < value.x + this.w) &&
+                                (vars.mouseY > value.y && vars.mouseY < value.y + this.h)
+                            ) {
+                                this.swapItems(value.inventoryID, this.chosen.inventoryID);
+
+                                vars.events.isMouseWithInv = false;
+                                isChecked = true;
+                                break
+                            }
+                        }
+                        if(isChecked === false){
+                            for(let index in this.equipment){
+                                let value = this.equipment[index];
+
+                                if(
+                                    (vars.mouseX > value.x && vars.mouseX < value.x + this.w) &&
+                                    (vars.mouseY > value.y && vars.mouseY < value.y + this.h)
+                                ){
+                                    this.swapItems(value.inventoryID,this.chosen.inventoryID);
+                                    vars.events.isMouseWithInv = false;
+                                    isChecked = true;
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            //Putting back the object if wrong pos
+            if(isChecked === false && vars.events.isLeftMouseReleased && vars.events.isMouseWithInv === true){
+                vars.events.isMouseWithInv = false;
+            }
+
+            //Checking if some interaction buttons pressed(works only when there is a chosen item)
+            if(maint.isReachable(this.chosen)) {
+                //Checking if drop button clicked
+                if (
+                    vars.events.isLeftMouseReleased &&
+                    ((vars.mouseX > this.x + 216 && vars.mouseX < this.x + 216 + 63) &&
+                        (vars.mouseY > this.y + 345 && vars.mouseY < this.y + 345 + 30))
+                ) {
+                    vars.isChecked = false;
+                    //By mathematics(lul) getting cords for dropped item
+                    let x2 = vars.player.x + Math.cos((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
+                    let y2 = vars.player.y - Math.sin((-45 + (-vars.player.rangedAttackBox) * 45) * (Math.PI / 180)) * (vars.player.size - 40);
+                    let item = {
+                        "w": itemList.getItem(this.chosen.object.id).sprite.w,
+                        "h": itemList.getItem(this.chosen.object.id).sprite.h
+                    };
+                    //Creating("dropping item")
+                    maint.createInTheWorld(x2 - item.w / 1.8, y2 - item.h / 1.8, this.chosen.object.id, vars, {"amount": this.chosen.object.amount});
+
+                    //Removing it from this
+                    this.removeItem(this.chosen.inventoryID);
+                }
+
+                //Checking if use button clicked
+                if (
+                    vars.events.isLeftMouseReleased &&
+                    (
+                        vars.mouseX > this.x + 216 &&
+                        vars.mouseX < this.x + 216 + 63 &&
+                        vars.mouseY > this.y + 312 &&
+                        vars.mouseY < this.y + 312 + 30
+                    )
+                ) {
+                    if(
+                        maint.isReachable(itemList.getItem(this.chosen.object.id).action)
+                    ){
+                        itemList.getItem(this.chosen.object.id).use(vars.player);
+
+                        if (
+                            itemList.getItem(this.chosen.object.id).effects.isOneUse ||
+                            (maint.isReachable(this.chosen.object.meta) &&
+                                this.chosen.object.meta.isOneUse)
+                        ){
+                            this.removeItem(this.chosen.inventoryID);
+                        }
+                    }
+                }
+
+            }
+
+            //Checking if close button pressed
+            if (
+                vars.events.isLeftMouseReleased === true &&
+                vars.mouseX > this.x + 288 && vars.mouseX < this.x + 288 + 60 &&
+                vars.mouseY > this.y + 12 && vars.mouseY < this.y + 84
+            ) {
+                vars.events.isInventoryOpen = false;
+            }
+
+            //Checking for mousewheel for change in vertical position
+            if(
+                vars.events.isWheel &&
+                (vars.mouseX >= this.x + 27 && vars.mouseX <= this.x + 176) &&
+                (vars.mouseY >= this.y + 125 && vars.mouseY <= this.y + 275)
+            ){
+                if(vars.events.deltaY > 0){
+                    if((this.verticalPosition + 1) * 9 < this.slots.length){
+                        this.verticalPosition++;
+                    }
+                }else{
+                    if(this.verticalPosition - 1 >= 0){
+                        this.verticalPosition--;
+                    }
+                }
+            }
+
+            //Checking for slider interactions to change vertical position
+            let parts = (this.slots.length / 9) - 1,
+                partLength = 135 / parts;
+            this.sliderY = this.verticalPosition * partLength;
+
+
+
+
+
+            if(
+                this.isSliderDragging &&
+                (
+                    (vars.events.isLeftMouseReleased) ||
+                    (vars.mouseY <= this.y + 133 || vars.mouseY >= this.y + 269)
+                )
+            ){this.isSliderDragging = false;}
+            else if(
+                this.isSliderDragging ||
+                (
+                    vars.events.isLeftMousePressed &&
+                    vars.mouseX >= this.x + 177 && vars.mouseX <= this.x + 189 &&
+                    vars.mouseY >= this.y + 133 && vars.mouseY <= this.y + 269
+                )
+            ) {
+                this.isSliderDragging = true;
+                //Now getting what vertical position is closer to slider and setting the position to slider
+
+                let mouseYRelative = vars.mouseY - this.y - 133;
+
+                let distanceToHigher = this.verticalPosition + 1 < this.slots.length / 9 ? Math.abs((this.verticalPosition + 1) * partLength - mouseYRelative) : Infinity;
+                let distanceToLower = this.verticalPosition - 1 >= 0 ? Math.abs((this.verticalPosition - 1) * partLength - mouseYRelative) : Infinity;
+
+                if(!(Math.abs(this.sliderY - mouseYRelative) <= partLength * 0.4)){
+                    this.sliderY = distanceToHigher >= distanceToLower ? this.verticalPosition-- * partLength : this.verticalPosition++ * partLength;
+                }
+            }
+
+
+
+            //Checking for inventory moving
+            if(
+                !this.isSliderDragging &&
+                vars.events.isLeftMousePressed &&
+                vars.mouseX > this.x && vars.mouseX < this.x + 280 &&
+                vars.mouseY > this.y && vars.mouseY < this.y + 90
+            ){
+                this.x = vars.mouseX - 140;
+                this.y = vars.mouseY - 45;
+            }
         };
 
         //Inventory functions
@@ -595,10 +827,10 @@ define(["maintenance","vars"],function (maint,vars) {
                             let originStoredItem = itemList.getItem(value.object.id);
                             if (originItem === originStoredItem) {
                                 if (maint.isReachable(value.object.meta)) {
-                                    value.meta.amount = maint.isReachable(value.object.meta.amount) ? value.meta.amount + item.meta.amount : 1 + item.meta.amount;
+                                    value.object.meta.amount = maint.isReachable(value.object.meta.amount) ? value.object.meta.amount + item.meta.amount : 1 + item.meta.amount;
                                     return true;
                                 } else {
-                                    value.meta = {"amount": 1 + item.meta.amount};
+                                    value.object.meta = {"amount": 1 + item.meta.amount};
                                     return true;
                                 }
                             }
@@ -610,6 +842,7 @@ define(["maintenance","vars"],function (maint,vars) {
                 for(let value of this.slots){
                     if(!maint.isReachable(value.object)){
                         value.object = {"id": item.id,"x":0,"y":0};
+                        value.object.meta = maint.isReachable(originItem.meta) ? originItem.meta : undefined;
                         return true;
                     }
                 }
@@ -682,7 +915,7 @@ define(["maintenance","vars"],function (maint,vars) {
 
         //Equipment getters
         getWeapon = function(){
-            return maint.isReachable(this.equipment.weapon) ? itemList.getItem(10) : null; //Getting hands item(yea it's item)
+            return maint.isReachable(this.equipment.weapon.object) ? this.equipment.weapon.object : itemList.getItem(10); //Getting hands item(yea it's item)
         };
         getArmor = function(){
             return maint.isReachable(this.equipment.armor) ? this.equipment.armor : null;
@@ -697,6 +930,32 @@ define(["maintenance","vars"],function (maint,vars) {
             return maint.isReachable(this.equipment.shield) ? this.equipment.shield : null;
         };
 
+        sellItem = function(idOfSlotWithItem){
+            let slot = this.getSlot(idOfSlotWithItem);
+
+            //Checking if item exists and if shopkeeper buy that items
+            if(
+                maint.isReachable(slot.object) &&
+                classes.isShopOpened(vars.menues) &&
+                classes.findShop(vars.menues).menu.shopType.includes(itemList.getItem(slot.object.id).type,0)
+            ){
+                let originalItem = itemList.getItem(slot.object.id);
+                let npcTrader = classes.findNpcByShopId(classes.findShop(vars.menues).id,vars.npcs);
+
+                //Checking if trader can afford this
+                if(
+                    npcTrader.money - originalItem.cost >= 0
+                ) {
+                    vars.player.money += originalItem.cost;
+                    npcTrader.money -= originalItem.cost;
+                    slot.object = null;
+                    return true;
+                }else{
+                    maint.genTextAlert("This shopkeeper can't afford this","rgba(255,240,240,1.0)",vars);
+                    return true;
+                }
+            }
+        };
 
     };
 
@@ -714,11 +973,8 @@ define(["maintenance","vars"],function (maint,vars) {
             this.y = 390;
             this.velX = 0;
             this.velY = 0;
-            this.speed = 1;
-            this.size = 12;
-            this.color = "rgba(255,255,255,1.0)";
 
-            //Basic stats
+            //Main stats
             this.hp = 10;
             this.stamina = 10;
             this.mana = 10;
@@ -737,14 +993,63 @@ define(["maintenance","vars"],function (maint,vars) {
             this.isDead = false;
             this.deathTime = 0;
 
+            //Other stats
+            this.stats = {
+                "speed":1,
+                "size":1,
+                "color":"rgba(255,255,255,1.0)",
+                //Basic attributes
+                "intellect":0,
+                "strength":0,
+                "agility":0,
+                "will":0,
+                //Skills
+
+                //Magic //TODO implement damage scaling by user skill
+                //Main magic skills
+                "destructionMagicSkill":0,
+                "alterationMagicSkill":0,
+                //Its subparagraphs
+
+                //Destruction
+                //Safe(for user)
+                "arcaneMagicSkill":0,
+                //Unsafe(for user)
+                "elementalMagicSkill":0,
+                "explosionMagicSkill":0,
+                "voidMagicSkill":0,
+
+                //Alteration
+                //Subparagraps
+                //Safe(for user)
+                "transmutationMagicSkill":0,
+                //Unsafe(for user)
+                "lifeMagicSkill":0,
+                "mindControlMagicSkill":0,
+                "illusionMagicSkill":0,
+
+                //Fight //TODO implement damage scaling by user skill
+                //Main fight skills
+                "shortSwordsSkill":0,
+                "longSwordsSkill":0,
+                "staffsSkill":0,
+                "axesSkill":0,
+                "shieldsSkill":0,
+
+                //Stealth //TODO implement stealth
+                "stealth":0,
+                "daggersSkill":0,
+                "pickpocketSkill":0
+
+                //TODO Production skills
+            };
+
             //Skills
             this.level = 1;
             this.exp = 0;
             this.expToNextLevel = 0;
             this.upgradePoints = 0;
-            this.defSkill = 0;
-            this.magicSkill = 0;
-            this.fightingSkill = 0;
+
             this.skills = [];
 
             //Items
@@ -791,7 +1096,10 @@ define(["maintenance","vars"],function (maint,vars) {
                 this.timeFromLastAttack += vars.dt;
                 //Checking, then attacking
                 if(!this.isDead){
-                    if (this.attack === true && this.timeFromLastAttack >= itemList.getItem(this.inventory.getWeapon().id).effects.cooldown) {
+                    if (
+                        this.attack === true &&
+                        this.timeFromLastAttack >= itemList.getItem(this.inventory.getWeapon().id).effects.cooldown
+                    ) {
                         let playerWeapon = this.inventory.getWeapon();
                         let origin = itemList.getItem(playerWeapon.id);
                         if(origin.effects.weaponType === "melee"){
@@ -902,14 +1210,14 @@ define(["maintenance","vars"],function (maint,vars) {
             //Applying movement
             this.x += this.velX * dt * maint.getSpeed(this);
             this.y += this.velY * dt * maint.getSpeed(this);
-            this.speed = 1;
+            this.stats.speed = 1;
 
         };
         interactions = function(){
 
         };
 
-        //Operating with player actions //TODO make actions system
+        //Operating with player actions
         operateActions = function(){
             for(let i = 0;i < this.actions.length;i++) {
                 if(!this.actions[i].act()){
@@ -982,7 +1290,57 @@ define(["maintenance","vars"],function (maint,vars) {
         }
     };
 
-    //Menus
+    //Menus and its items
+    classes.MenuItem = class{
+        constructor(parent,sprite,w,h){
+            this.parent = parent;
+            this.sprite = sprite;
+            this.w = w > 0 ? w : undefined;
+            this.h = h > 0 ? h : undefined;
+        };
+    };
+
+    classes.MenuLayer = class{
+        constructor(parent,items){
+            this.parent = parent;
+            this.items = items;
+        };
+    };
+
+
+    classes.Menu = class{
+        constructor(name, actions, layers){
+            this.name = name;
+            this.actions = actions;
+            this.layers = layers;
+        }
+
+        update = function () {
+            this.action();
+        };
+
+        render = function(){
+            for(let index = 0;index < this.layers;index++){
+
+                let layer = this.layers[index];
+                for(let itemIndex = 0;itemIndex < layer.items.length;itemIndex++){
+                    let item = layer.items[itemIndex];
+
+                    if(
+                        (item.w > 0 || maint.isReachable(item.w)) ||
+                        (item.h > 0 || maint.isReachable(item.h))
+                    ){
+                        item.sprite.draw(vars.lastTime,vars.ctx,item.x,item.y);
+                    }else{
+                        item.sprite.drawWH(vars.lastTime,vars.ctx,item.x,item.y,item.w,item.h);
+                    }
+                }
+
+            }
+        };
+
+    };
+
 
     //Shop
     classes.Shop = class{
@@ -1045,7 +1403,11 @@ define(["maintenance","vars"],function (maint,vars) {
                 }
             }
             for(let i = 0;i < 4;i++) {
-                if(vars.events.isLeftMouseReleased && vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 && vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14){
+                if(
+                    vars.events.isLeftMouseReleased &&
+                    vars.mouseX > this.buttons[i].x && vars.mouseX < this.buttons[i].x + 14 &&
+                    vars.mouseY > this.buttons[i].y && vars.mouseY < this.buttons[i].y + 14
+                ){
                     if(vars.player.money >= this.items[i + this.pos].cost){
 
                         let item = this.items[i + this.pos];
